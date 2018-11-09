@@ -9,7 +9,7 @@ public class Packet {
   public static enum Type {
     INFORMATION,
     CONNECTION_REQUEST,
-    ACCEPTED_CONNECTION_REQUEST,
+    PAQUET_RECEPTION,
     REFECTED_PAQUET,
     ENDING_CONNECTION,
     P_BITS
@@ -22,38 +22,16 @@ public class Packet {
   // Static Methods
 
   public static Packet convertToPacket(byte[] data) {
-    return new Packet(0, Type.I, "");
+    return new Packet(0, Type.INFORMATION, "");
   }
 
-  // ------------------------------------------------------------------------
-  // Packet Object
-
-  // Attributes
-  private byte id;
-  private Type type;
-  private String data;
-
-  /**
-   * @param id Identifies the packet (0-7).
-   * @param type Identifies the type of the packet (see class Type).
-   */
-  public Packet(byte id, Type type, String data) {
-    this.id = id;
-    this.type = type;
-    this.data = data;
-  }
-
-  private Byte[] toBinary() {
-    return new Byte[1];
-  }
-
-  private byte getTypeByte() {
-    switch (this.type) {
+  private static byte convertTypeToByte(Type type) {
+    switch (type) {
       case Type.INFORMATION:
         return (byte) 'I';
       case Type.CONNECTION_REQUEST:
         return (byte) 'C';
-      case Type.ACCEPTED_CONNECTION_REQUEST:
+      case Type.PAQUET_RECEPTION:
         return (byte) 'A';
       case Type.REFECTED_PAQUET:
         return (byte) 'R';
@@ -62,5 +40,52 @@ public class Packet {
       default:
         return (byte) 'P';
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // Packet Object
+
+  // Attributes
+  private byte id;
+  private byte type;
+  private String data;
+
+  /**
+   * @param id Identifies the packet (0-7).
+   * @param type Identifies the type of the packet (see class Type).
+   */
+  public Packet(byte id, Type type, String data) {
+    this.id = id;
+    this.type = Packet.convertTypeToByte(type);
+    this.data = data;
+  }
+
+  private Byte[] toBinary() {
+    return new Byte[1];
+  }
+
+  public int getId() {
+    return this.id;
+  }
+
+  public Type getType() {
+    switch ((char) (this.type & 0xFF)) {
+      case 'I':
+        return Type.INFORMATION:
+      case 'C':
+        return Type.CONNECTION_REQUEST:
+      case 'A':
+        return Type.PAQUET_RECEPTION:
+      case 'R':
+        return Type.REFECTED_PAQUET:
+      case 'F':
+        return Type.ENDING_CONNECTION:
+      default:
+        return Type.P_BITS;
+    }
+  }
+
+  public String getData() {
+    return this.data;
   }
 }
