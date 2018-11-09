@@ -2,43 +2,46 @@ package receiver;
 
 import models.Packet;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.Buffer;
+import java.util.ArrayList;
 
 public class ReceiverSocket {
 
-    ServerSocket serverSocket;
-    ReceptionListener receptionListener;
-    PrintWriter out;
-    BufferedReader in;
+    private ServerSocket serverSocket;
+    private PacketReceptionListener receptionListener;
+    private PrintWriter out;
+    private InputStream in;
 
     public ReceiverSocket(int port) throws IOException {
         serverSocket = new ServerSocket(port);
         Socket clientSocket = serverSocket.accept();
 
         out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
+        in = clientSocket.getInputStream();
 
-                }
-            }
-        }.run();
     }
 
+    private void listenSocket() {
+        ((Runnable) () -> {
+            byte[] bytes = new byte[0];
+            try {
+                bytes = new byte[in.available()];
+                in.read(bytes);
+                //receptionListener.onPacketReceived(new Packet(bytes));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).run();
+    }
 
-    public void setReceptionListener(ReceptionListener receptionListener) {
+    public void setReceptionListener(PacketReceptionListener receptionListener) {
         this.receptionListener = receptionListener;
     }
 
-    public interface ReceptionListener{
+    public interface PacketReceptionListener{
 
         void onPacketReceived(Packet packet);
 
