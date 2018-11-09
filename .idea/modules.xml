@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Client/Client.iml" filepath="$PROJECT_DIR$/Client/Client.iml" />
       <module fileurl="file://$PROJECT_DIR$/Main/Main.iml" filepath="$PROJECT_DIR$/Main/Main.iml" />
       <module fileurl="file://$PROJECT_DIR$/Receveur/Receveur.iml" filepath="$PROJECT_DIR$/Receveur/Receveur.iml" />
       <module fileurl="file://$PROJECT_DIR$/ift3325_tp2_server.iml" filepath="$PROJECT_DIR$/ift3325_tp2_server.iml" />
