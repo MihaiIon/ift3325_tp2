@@ -1,24 +1,18 @@
 package models;
 
 public class Packet {
-
+  
   /**
    * Used in the constructor to specifiy the type (role)
    * of the packet that is sent. 
    */
-  public class Type {
-    // Information.
-    public static byte I = (byte) 'I';
-    // Connection Request.
-    public static byte C = (byte) 'C';
-    // Confirmation. 
-    public static byte A = (byte) 'A';
-    // Rejection.
-    public static byte R = (byte) 'R';
-    // End Communications.
-    public static byte F = (byte) 'F';
-    // P bits.
-    public static byte P = (byte) 'P';
+  public static enum Type {
+    INFORMATION,
+    CONNECTION_REQUEST,
+    PAQUET_RECEPTION,
+    REFECTED_PAQUET,
+    ENDING_CONNECTION,
+    P_BITS
   }
   
   // Used for the bits stuffing.
@@ -28,7 +22,24 @@ public class Packet {
   // Static Methods
 
   public static Packet convertToPacket(byte[] data) {
-    return new Packet(0, Type.I, "");
+    return new Packet(0, Type.INFORMATION, "");
+  }
+
+  private static byte convertTypeToByte(Type type) {
+    switch (type) {
+      case Type.INFORMATION:
+        return (byte) 'I';
+      case Type.CONNECTION_REQUEST:
+        return (byte) 'C';
+      case Type.PAQUET_RECEPTION:
+        return (byte) 'A';
+      case Type.REFECTED_PAQUET:
+        return (byte) 'R';
+      case Type.ENDING_CONNECTION:
+        return (byte) 'F';
+      default:
+        return (byte) 'P';
+    }
   }
 
   // ------------------------------------------------------------------------
@@ -43,13 +54,38 @@ public class Packet {
    * @param id Identifies the packet (0-7).
    * @param type Identifies the type of the packet (see class Type).
    */
-  public Packet(byte id, byte type, String data) {
+  public Packet(byte id, Type type, String data) {
     this.id = id;
-    this.type = type;
+    this.type = Packet.convertTypeToByte(type);
     this.data = data;
   }
 
   private Byte[] toBinary() {
     return new Byte[1];
+  }
+
+  public int getId() {
+    return this.id;
+  }
+
+  public Type getType() {
+    switch ((char) (this.type & 0xFF)) {
+      case 'I':
+        return Type.INFORMATION:
+      case 'C':
+        return Type.CONNECTION_REQUEST:
+      case 'A':
+        return Type.PAQUET_RECEPTION:
+      case 'R':
+        return Type.REFECTED_PAQUET:
+      case 'F':
+        return Type.ENDING_CONNECTION:
+      default:
+        return Type.P_BITS;
+    }
+  }
+
+  public String getData() {
+    return this.data;
   }
 }
