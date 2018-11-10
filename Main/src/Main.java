@@ -13,9 +13,6 @@ import java.util.Arrays;
  * % Receiver <Numero_Port>
  */
 
-
-
-
 public class Main {
 
     public static void main(String args[]) throws IOException {
@@ -30,14 +27,15 @@ public class Main {
 
 
             //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un émetteur
-        } else if (args.length == 4 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[1])
-                && StringUtils.isNumeric(args[3])) {
+        } else if (args.length == 4 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[2])
+                && StringUtils.isNumeric(args[4])) {
 
-            int port = Integer.valueOf(args[1]);
-            String filePath = args[2];
-            int backN = Integer.valueOf(args[3]);
+            String hostname = args[1];
+            int port = Integer.valueOf(args[2]);
+            String filePath = args[3];
+            int backN = Integer.valueOf(args[4]);
 
-            Sender sender = new Sender(port, filePath, backN);
+            Sender sender = new Sender(hostname, port, filePath, backN);
             sender.run();
 
         } else {
