@@ -1,12 +1,10 @@
 package receiver;
 
-import models.Packet;
+import models.PacketModel;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.Buffer;
-import java.util.ArrayList;
 
 public class ReceiverSocket {
 
@@ -30,7 +28,7 @@ public class ReceiverSocket {
             try {
                 bytes = new byte[in.available()];
                 in.read(bytes);
-                //receptionListener.onPacketReceived(new Packet(bytes));
+                //receptionListener.onPacketReceived(new PacketModel(bytes));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -43,7 +41,7 @@ public class ReceiverSocket {
 
     public interface PacketReceptionListener{
 
-        void onPacketReceived(Packet packet);
+        void onPacketReceived(PacketModel packet);
 
     }
 }

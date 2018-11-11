@@ -1,6 +1,6 @@
 package receiver;
 
-import models.Packet;
+import models.PacketModel;
 
 import java.io.IOException;
 
@@ -18,7 +18,7 @@ public class Receiver implements ReceiverSocket.PacketReceptionListener {
     }
 
     @Override
-    public void onPacketReceived(Packet packet) {
+    public void onPacketReceived(PacketModel packet) {
 
     }
 }
