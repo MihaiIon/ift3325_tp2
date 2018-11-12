@@ -1,2 +1,2 @@
-# ift3325_tp2_server
+# ift3325_tp2
 Implanter une version simplifiée du protocole HDLC

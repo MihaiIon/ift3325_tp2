@@ -1,20 +1,26 @@
 package receiver;
 
+
 import models.PacketModel;
+import networking.SocketMonitor;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public class Receiver implements ReceiverSocket.PacketReceptionListener {
+public class Receiver implements SocketMonitor.PacketReceptionListener {
 
-    private ReceiverSocket receiverSocket;
+    ServerSocket serverSocket;
+    SocketMonitor socketMonitor;
+    OutputStream out;
 
     public Receiver(int port) throws IOException {
-        receiverSocket = new ReceiverSocket(port);
-        receiverSocket.setReceptionListener(this);
-    }
-
-    public void run() {
-
+        serverSocket = new ServerSocket(port);
+        Socket clientSocket = serverSocket.accept();
+        out = clientSocket.getOutputStream();
+        socketMonitor = new SocketMonitor(clientSocket);
+        socketMonitor.setReceptionListener(this);
     }
 
     @Override
