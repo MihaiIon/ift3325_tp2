@@ -1,3 +1,4 @@
+import managers.TestManager;
 import receiver.Receiver;
 import sender.Sender;
 import utils.StringUtils;
@@ -42,6 +43,7 @@ public class Main {
 
         } else {
             System.out.print("Arguments du programme invalides : " + Arrays.toString(args));
+            TestManager.testData("allo");
         }
     }
 }
