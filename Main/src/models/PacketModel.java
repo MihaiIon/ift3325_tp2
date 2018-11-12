@@ -58,6 +58,7 @@ public class PacketModel {
   private byte id;
   private byte type;
   private PayloadModel payload;
+  private CheckSumModal checkSum;
 
   /**
    * @param id Identifies the packet (0-7).
@@ -67,6 +68,7 @@ public class PacketModel {
     this.id = id;
     this.type = PacketModel.convertTypeToByte(type);
     this.payload = payload;
+    this.checkSum = new CheckSumModal(payload);
   }
 
   /**
@@ -78,8 +80,7 @@ public class PacketModel {
     bytes[1] = this.type;
     bytes[2] = this.id;
     bytes[3] = DataManager.FLAG;
-    return "IN PROGRESS";
-//    return ConversionManager.convertBytesToString(bytes);
+    return ConversionManager.convertBytesToString(bytes);
   }
 
   // ------------------------------------------------------------------------
@@ -117,7 +118,11 @@ public class PacketModel {
    * @return Provides the data contained in the packet.
    */
   public PayloadModel getPayload() {
-    return this.payload;
+    return payload;
+  }
+
+  public CheckSumModal getCheckSum() {
+    return checkSum;
   }
 
   @Override
@@ -127,7 +132,8 @@ public class PacketModel {
     sb.append("\n\tid : " + getId());
     sb.append("\n\ttype : " + getType());
     sb.append("\n\tpayload : " + ConversionManager.convertStreamToReadableStream(getPayload().toString()));
-    sb.append("\n\tbinary : " + toBinary());
+    sb.append("\n\tcheckSum : IN PROGRESS "/* + ConversionManager.convertStreamToReadableStream(getCheckSum().toString())*/);
+    sb.append("\n\tbinary : IN PROGRESS "/* + ConversionManager.convertStreamToReadableStream(toBinary())*/);
     return sb.toString();
   }
 }
