@@ -8,7 +8,7 @@ public class DataManager {
     // Used for the bits stuffing.
     public static byte FLAG = (byte) 126;
 
-    //
+    // Sets the size (in bytes) of each payloads.
     public static int PAYLOAD_SIZE = 4;
 
     /**

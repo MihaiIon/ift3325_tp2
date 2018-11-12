@@ -7,9 +7,8 @@ import static managers.DataManager.PAYLOAD_SIZE;
 public class ConversionManager {
 
     /**
-     *
-     * @param data
-     * @return
+     * @param data The data that will be sent to the receiver.
+     * @return Stream of bits.
      */
     public static String convertDataToBitsStream(String data) {
         byte[] bytes = data.getBytes(StandardCharsets.US_ASCII);
@@ -17,9 +16,8 @@ public class ConversionManager {
     }
 
     /**
-     *
-     * @param stream
-     * @return
+     * @param stream Stream of bits.
+     * @return Provides the data that was originally sent.
      */
     public static String convertBitsStreamToData(String stream) {
         String data = "";
