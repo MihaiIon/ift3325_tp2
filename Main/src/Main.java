@@ -1,3 +1,4 @@
+import managers.TestManager;
 import receiver.Receiver;
 import sender.Sender;
 import utils.StringUtils;
@@ -24,6 +25,7 @@ public class Main {
 
             int port = Integer.valueOf(args[1]);
             Receiver receiver = new Receiver(port);
+//            receiver.run();
 
             //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un émetteur
         } else if (args.length == 5 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[2])
@@ -39,6 +41,7 @@ public class Main {
 
         } else {
             System.out.print("Arguments du programme invalides : " + Arrays.toString(args));
+            TestManager.testData("allo");
         }
     }
 }

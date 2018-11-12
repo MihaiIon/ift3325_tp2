@@ -1,6 +1,6 @@
 package networking;
 
-import models.Packet;
+import models.PacketModel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class SocketMonitorThread extends Thread {
         try {
             String input;
             while ((input = in.readLine()) != null) {
-                receptionListener.onPacketReceived(Packet.convertToPacket(input));
+                receptionListener.onPacketReceived(PacketModel.convertToPacket(input));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -36,6 +36,6 @@ public class SocketMonitorThread extends Thread {
     }
 
     public interface PacketReceptionListener{
-        void onPacketReceived(Packet packet);
+        void onPacketReceived(PacketModel packet);
     }
 }

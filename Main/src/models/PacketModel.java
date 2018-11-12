@@ -1,6 +1,9 @@
 package models;
 
-public class Packet {
+import managers.ConversionManager;
+import managers.DataManager;
+
+public class PacketModel {
 
   // ------------------------------------------------------------------------
   // Static
@@ -17,17 +20,14 @@ public class Packet {
     ENDING_CONNECTION,
     P_BITS
   }
-  
-  // Used for the bits stuffing.
-  private static byte FLAG = (byte) 126;
 
   /**
-   * Converts the provided binary data to a Packet Object.
+   * Converts the provided binary data to a PacketModel Object.
    * @param stream Stream of bites reprensenting the packet.
-   * @return Packet Object.
+   * @return PacketModel Object.
    */
-  public static Packet convertToPacket(String stream) {
-    return new Packet((byte)0, Type.INFORMATION, "TODO");
+  public static PacketModel convertToPacket(String stream) {
+    return new PacketModel((byte)0, Type.INFORMATION, new PayloadModel("00000000000000000000000000000000"));
   }
 
   /**
@@ -51,54 +51,36 @@ public class Packet {
     }
   }
 
-  /**
-   * @param b Byte to be converted to String.
-   * @return Provides a String of bits representing the byte.
-   */
-  private static String convertByteToString(byte b) {
-    return String.format("%8s", Integer.toBinaryString(b & 0xFF)).replace(' ', '0');
-  }
-
-  /**
-   * @param bs Array of bytes.
-   * @return Provides a String of bits representing each byte.
-   */
-  private static String convertBytesToString(byte[] bs) {
-    String str = "";
-    for (int i = 0; i < bs.length; i++){
-      str += convertByteToString(bs[i]);
-    }
-    return str;
-  }
-
   // ------------------------------------------------------------------------
-  // Packet Object
+  // Packet Model
 
   // Attributes
   private byte id;
   private byte type;
-  private String data;
+  private PayloadModel payload;
+  private CheckSumModal checkSum;
 
   /**
    * @param id Identifies the packet (0-7).
    * @param type Identifies the type of the packet (see class Type).
    */
-  public Packet(byte id, Type type, String data) {
+  public PacketModel(byte id, Type type, PayloadModel payload) {
     this.id = id;
-    this.type = Packet.convertTypeToByte(type);
-    this.data = data;
+    this.type = PacketModel.convertTypeToByte(type);
+    this.payload = payload;
+    this.checkSum = new CheckSumModal(payload);
   }
 
   /**
-   * Converts Packet object to binary number.
+   * Converts PacketModel object to binary number.
    */
   public String toBinary() {
     byte[] bytes = new byte[4];
-    bytes[0] = FLAG;
-    bytes[1] = this.id;
-    bytes[2] = this.type;
-    bytes[3] = FLAG;
-    return convertBytesToString(bytes);
+    bytes[0] = DataManager.FLAG;
+    bytes[1] = this.type;
+    bytes[2] = this.id;
+    bytes[3] = DataManager.FLAG;
+    return ConversionManager.convertBytesToString(bytes);
   }
 
   // ------------------------------------------------------------------------
@@ -135,7 +117,23 @@ public class Packet {
   /**
    * @return Provides the data contained in the packet.
    */
-  public String getData() {
-    return this.data;
+  public PayloadModel getPayload() {
+    return payload;
+  }
+
+  public CheckSumModal getCheckSum() {
+    return checkSum;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Packet : ");
+    sb.append("\n\tid : " + getId());
+    sb.append("\n\ttype : " + getType());
+    sb.append("\n\tpayload : " + ConversionManager.convertStreamToReadableStream(getPayload().toString()));
+    sb.append("\n\tcheckSum : IN PROGRESS "/* + ConversionManager.convertStreamToReadableStream(getCheckSum().toString())*/);
+    sb.append("\n\tbinary : IN PROGRESS "/* + ConversionManager.convertStreamToReadableStream(toBinary())*/);
+    return sb.toString();
   }
 }
