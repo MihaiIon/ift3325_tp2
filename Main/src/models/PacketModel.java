@@ -27,12 +27,7 @@ public class PacketModel {
    * @return PacketModel Object.
    */
   public static PacketModel convertToPacket(String stream) {
-    try {
-      return new PacketModel((byte)0, Type.INFORMATION, new PayloadModel(new byte[4]));
-    } catch(PayloadModel.PayloadLengthException e) {
-      System.out.println(e);
-    }
-    return null;
+    return new PacketModel((byte)0, Type.INFORMATION, new PayloadModel("00000000000000000000000000000000"));
   }
 
   /**
@@ -83,7 +78,8 @@ public class PacketModel {
     bytes[1] = this.type;
     bytes[2] = this.id;
     bytes[3] = DataManager.FLAG;
-    return ConversionManager.convertBytesToString(bytes);
+    return "IN PROGRESS";
+//    return ConversionManager.convertBytesToString(bytes);
   }
 
   // ------------------------------------------------------------------------
@@ -122,5 +118,16 @@ public class PacketModel {
    */
   public PayloadModel getPayload() {
     return this.payload;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("Packet : ");
+    sb.append("\n\tid : " + getId());
+    sb.append("\n\ttype : " + getType());
+    sb.append("\n\tpayload : " + ConversionManager.convertStreamToReadableStream(getPayload().toString()));
+    sb.append("\n\tbinary : " + toBinary());
+    return sb.toString();
   }
 }
