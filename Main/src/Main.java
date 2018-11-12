@@ -17,17 +17,16 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
 
+
+        System.setProperty( "sun.security.ssl.allowUnsafeRenegotiation", "true" );
         //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un receveur
         if(args.length == 2 && args[0].toUpperCase().equals("RECEIVER") && StringUtils.isNumeric(args[1])) {
 
             int port = Integer.valueOf(args[1]);
-
             Receiver receiver = new Receiver(port);
-            receiver.run();
-
 
             //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un émetteur
-        } else if (args.length == 4 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[2])
+        } else if (args.length == 5 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[2])
                 && StringUtils.isNumeric(args[4])) {
 
             String hostname = args[1];
