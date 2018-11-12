@@ -41,7 +41,7 @@ public class Main {
 
         } else {
             System.out.print("Arguments du programme invalides : " + Arrays.toString(args));
-            TestManager.testData("allo");
+            TestManager.testData("mihai");
         }
     }
 }

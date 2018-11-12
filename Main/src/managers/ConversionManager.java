@@ -2,8 +2,6 @@ package managers;
 
 import java.nio.charset.StandardCharsets;
 
-import static managers.DataManager.PAYLOAD_SIZE;
-
 public class ConversionManager {
 
     /**
@@ -54,12 +52,29 @@ public class ConversionManager {
     }
 
     /**
+     * @param stream Stream of bits (multiple of 8).
+     * @return Provides an array of bytes representing the stream of bits.
+     */
+    public static byte[] convertStringToBtyes(String stream) {
+        if(stream.length() % 8 == 0) {
+            int length = stream.length() / 8;
+            byte[] bytes = new byte[length];
+            for (int i = 0; i < length; i++) {
+                bytes[i] = convertStringToByte(stream.substring(i * 8, (i+1) * 8));
+            }
+            return bytes;
+        }
+        return null;
+    }
+
+    /**
      * @param stream Stream of bits.
      * @return Provides a string that groups each 8 bits together.
      */
     public static String convertStreamToReadableStream(String stream) {
         String output = "";
-        for (int i = 0; i < PAYLOAD_SIZE; i++) {
+        int length = stream.length() / 8;
+        for (int i = 0; i < length; i++) {
             String byteStream = stream.substring(i * 8, (i + 1) * 8);
             output += byteStream + " ";
         }
