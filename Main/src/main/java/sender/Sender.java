@@ -1,25 +1,24 @@
 package sender;
 
 import models.PacketModel;
-import models.PayloadModel;
-import networking.SocketMonitorThread;
+import networking.SocketController;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class Sender implements SocketMonitorThread.PacketReceptionListener {
+public class Sender extends SocketController {
 
     private AtomicInteger backN = new AtomicInteger();
     private AtomicInteger position = new AtomicInteger();
 
-    private SocketMonitorThread SocketMonitor;
-    private Socket socket;
-    private DataOutputStream out;
+    private ArrayList<PacketModel> unconfirmedPackets = new ArrayList<PacketModel>();
 
-    private ArrayList<PacketModel> unconfirmedPackets = new ArrayList<>();
+    private boolean busy;
 
     public Sender(String hostname, int port, int backN) {
         position.set(0);
@@ -27,10 +26,10 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
 
         try
         {
-            socket = new Socket(hostname, port);
+            Socket socket = new Socket(hostname, port);
             System.out.println("Connected");
             // sends output to the socket
-            out    = new DataOutputStream(socket.getOutputStream());
+            configureSocket(socket);
         } catch(IOException e)
         {
             e.printStackTrace();
@@ -48,7 +47,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
             String line = reader.readLine();
             while (line != null) {
                 line = "hello";//TODO lire le fichier reader.readLine();
-                sendData(line);
+                super.sendData(line);
             }
             reader.close();
         } catch (IOException e) {
@@ -56,38 +55,11 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
         }
     }
 
-    @Override
-    public void onPacketReceived(PacketModel packet) {
-        switch (packet.getType()) {
-            case PACKET_RECEPTION: {
-                confirmPackets(position.get(), packet.getId());
-                for (PacketModel p: unconfirmedPackets) {
-//                    try {
-//                        sendPacket(p);
-//                    } catch (IOException e) {
-//                        e.printStackTrace(); //TODO
-//                    }
-                }
 
-                break;
-            }
-            case REJECTED_PACKET: {
 
-                break;
-            }
-        }
-    }
-
-    private void sendData(String data) throws IOException {
-        //PacketModel packet = new PacketModel((byte)'a', PacketModel.Type.INFORMATION, new PayloadModel(data)); //TODO byte[1] remplacer par num de trame
-        //unconfirmedPackets.add(packet);
-        //out.write(packet.toBinary().getBytes());
-        out.writeUTF(data);
-    }
-
-    private void sendPacket(PacketModel p) throws IOException {
+    public void sendPacket(PacketModel p) {
         unconfirmedPackets.add(p);
-     //   out.write(p.toBinary().getBytes());
+        super.sendPacket(p);
     }
 
     private void confirmPackets(int from, int to) {
@@ -100,5 +72,24 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
 
     private int nextPos(int pos) {
         return pos > backN.get() ? 0 : pos + 1;
+    }
+
+    public boolean isBusy() {
+        return false;
+    }
+
+    @Override
+    public void packetsReceived(ArrayList<PacketModel> packetsReceived) {
+        busy = true;
+
+
+        busy = false;
+    }
+
+    @Override
+    public void timeOutReached(int position) {
+        busy = true;
+
+        busy = false;
     }
 }

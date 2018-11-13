@@ -1,11 +1,14 @@
 package networking;
 
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 import models.PacketModel;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,14 +17,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SocketMonitorThread extends Thread {
 
-    private PacketReceptionListener receptionListener;
     private DataInputStream in;
+
+    private PublishSubject<ArrayList<PacketModel>> packetsPublisher;
+    private PublishSubject<Integer> timeOutPublisher;
+
+    private SocketController socketController;
 
     private AtomicInteger packetsReceived = new AtomicInteger(0);
 
-    public SocketMonitorThread(Socket socket, PacketReceptionListener receptionListener) throws IOException {
+    public SocketMonitorThread(Socket socket, SocketController socketController) throws IOException {
         in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-        this.receptionListener = receptionListener;
+        packetsPublisher = PublishSubject.create();
+        timeOutPublisher = PublishSubject.create();
+        this.socketController = socketController;
     }
 
     /*
@@ -30,10 +39,15 @@ public class SocketMonitorThread extends Thread {
     public void run() {
         try {
             String input;
+            ArrayList<PacketModel> cumulatedPackets = new ArrayList<>();
             while ((input = in.readUTF()) != null) {
                 System.out.println(input);
-                if(receptionListener != null) {
-                    // TODO receptionListener.onPacketReceived();
+                if(socketController.isBusy()) {
+                    //cumulatedPackets.add(new PacketModel())
+                    // TODO
+                    //
+                } else {
+                    packetsPublisher.onNext(cumulatedPackets);
                 }
                 new TimeOutMonitor(packetsReceived.incrementAndGet()).run();
             }
@@ -53,12 +67,11 @@ public class SocketMonitorThread extends Thread {
             this.packetNumber = packetNumber;
         }
 
-        @Override
         public void run() {
             try {
                 Thread.sleep(3000);
                 if(packetsReceived.get() <= packetNumber) {
-                    receptionListener.onPacketReceptionTimeOut();
+                    timeOutPublisher.onNext(packetNumber);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -66,10 +79,11 @@ public class SocketMonitorThread extends Thread {
         }
     }
 
+    public Observable<ArrayList<PacketModel>> getReceivedPacketsObservable() {
+        return packetsPublisher;
+    }
 
-    public interface PacketReceptionListener {
-        void onPacketReceived(PacketModel packet);
-
-        void onPacketReceptionTimeOut();
+    public Observable<Integer> getTimeOutObservable() {
+        return timeOutPublisher;
     }
 }
