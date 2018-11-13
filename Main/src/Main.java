@@ -25,7 +25,7 @@ public class Main {
 
             int port = Integer.valueOf(args[1]);
             Receiver receiver = new Receiver(port);
-//            receiver.run();
+            receiver.listen();
 
             //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un émetteur
         } else if (args.length == 5 && args[0].toUpperCase().equals("SENDER") && StringUtils.isNumeric(args[2])
@@ -36,8 +36,8 @@ public class Main {
             String filePath = args[3];
             int backN = Integer.valueOf(args[4]);
 
-            Sender sender = new Sender(hostname, port, filePath, backN);
-            sender.run();
+            Sender sender = new Sender(hostname, port, backN);
+            sender.sendFile(filePath);
 
         } else {
             System.out.print("Arguments du programme invalides : " + Arrays.toString(args));

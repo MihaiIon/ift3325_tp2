@@ -3,33 +3,43 @@ package receiver;
 import models.PacketModel;
 import networking.SocketMonitorThread;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Receiver implements SocketMonitorThread.PacketReceptionListener {
 
-    ServerSocket serverSocket;
+    ServerSocket server;
     SocketMonitorThread socketMonitor;
-    OutputStream out;
+    DataOutputStream out;
+    Socket client;
 
     public Receiver(int port) throws IOException {
-        serverSocket = new ServerSocket(port);
-        Socket clientSocket = serverSocket.accept();
-        out = clientSocket.getOutputStream();
-        try {
-            String input;
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            while ((input = in.readLine()) != null) {
-                System.out.println(input);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        server = new ServerSocket(port);
+        System.out.println("Server started");
         //socketMonitor = new SocketMonitorThread(clientSocket, this);
+    }
+
+    public void listen() throws IOException {
+        System.out.println("Waiting for a client ...");
+
+        client = server.accept();
+        System.out.println("Client accepted");
+
+        out = new DataOutputStream(new BufferedOutputStream(client.getOutputStream()));
+
+        socketMonitor = new SocketMonitorThread(client, this);
+        socketMonitor.start();
+        // takes input from the client socket
+        //DataInputStream in = new DataInputStream(new BufferedInputStream(client.getInputStream()));
+        //try {
+        //    String input;
+        //    while ((input = in.readUTF()) != null) {
+        //System.out.println(input);
+        //    }
+        //} catch (IOException e) {
+        //    e.printStackTrace();
+        //}
     }
 
     @Override
