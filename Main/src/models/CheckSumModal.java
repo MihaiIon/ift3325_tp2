@@ -8,8 +8,8 @@ public class CheckSumModal {
     private byte[] value;
 
     /**
-     *
-     * @param payload
+     * Computes the CRC and stores it. This will help in finding eventual errors in a payload.
+     * @param payload Encoded portion of the data.
      */
     public CheckSumModal (PayloadModel payload) {
         value = new byte[2];

@@ -1,6 +1,7 @@
 package managers;
 
 
+import models.PacketModel;
 import models.PayloadModel;
 
 public class DataManager {
@@ -19,7 +20,7 @@ public class DataManager {
         // Transform data into a stream of bits
         String stream = ConversionManager.convertDataToBitsStream(data);
         stream = encodeBitsStuffing(stream);
-        // Add zeros at the end of the stream until we have multiple of 32 (bits).
+        // Add zeros at the end of the stream until we have a multiple of 32 (bits).
         String paddedStream = stream;
         int payloadSize = PAYLOAD_SIZE * 8;
         int remainder = stream.length() % payloadSize;
@@ -38,9 +39,30 @@ public class DataManager {
     }
 
     /**
+     * Provides the original data.
+     * @param packets The received packets.
+     * @return
+     */
+    public static String extractDataFromPackets(PacketModel[] packets) {
+        String stream = getDataStream(packets);
+        return ConversionManager.convertBitsStreamToData(stream);
+    }
+
+    /**
+     * Provides the original stream (without bits stuffing).
+     * @param packets The received packets.
+     */
+    private static String getDataStream(PacketModel[] packets) {
+        String stream = "";
+        for (int i = 0; i < packets.length; i++) {
+            stream += packets[i].getPayload().toString();
+        }
+        return decodeBitsStuffing(stream);
+    }
+
+    /**
      *
      * @param stream
-     * @return
      */
     private static String encodeBitsStuffing(String stream) {
         String sequence = ConversionManager.convertByteToString(FLAG);
@@ -50,7 +72,6 @@ public class DataManager {
     /**
      *
      * @param stream
-     * @return
      */
     private static String decodeBitsStuffing(String stream) {
         String sequence = ConversionManager.convertByteToString(FLAG);
