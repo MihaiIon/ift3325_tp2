@@ -72,12 +72,13 @@ public class ConversionManager {
      * @return Provides a string that groups each 8 bits together.
      */
     public static String convertStreamToReadableStream(String stream) {
-        String output = "";
-        int length = stream.length() / 8;
-        for (int i = 0; i < length; i++) {
-            String byteStream = stream.substring(i * 8, (i + 1) * 8);
-            output += byteStream + " ";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < stream.length(); i++){
+            sb.append(stream.charAt(i));
+            if(i != 0 & i%8 == 7) {
+                sb.append(" ");
+            }
         }
-        return output;
+        return sb.toString();
     }
 }

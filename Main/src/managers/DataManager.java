@@ -10,30 +10,26 @@ public class DataManager {
     public static byte FLAG = (byte) 126;
 
     // Sets the size (in bytes) of each payloads.
-    public static int PAYLOAD_SIZE = 4;
+    public static int PAYLOAD_MAX_LENGTH = 256;
 
     /**
      * Splits the data in smaller payloads. Each packet contains one (1) payload.
-     * @param data The data to be sent to the receiver.
+     * @param message The message to be sent to the receiver.
      */
-    public static PayloadModel[] splitDataToPayloads(String data) {
+    public static PayloadModel[] splitMessageToPayloads(String message) {
         // Transform data into a stream of bits
-        String stream = ConversionManager.convertDataToBitsStream(data);
+        String stream = ConversionManager.convertDataToBitsStream(message);
         stream = encodeBitsStuffing(stream);
-        // Add zeros at the end of the stream until we have a multiple of 32 (bits).
-        String paddedStream = stream;
-        int payloadSize = PAYLOAD_SIZE * 8;
-        int remainder = stream.length() % payloadSize;
-        if(remainder != 0) {
-            int expectedLength = payloadSize * ((int) Math.ceil((double) stream.length() / payloadSize));
-            String format = "%1$-"+ expectedLength +"s";
-            paddedStream = String.format(format, stream).replace(' ', '0');
-        }
         // Create payloads
-        int length = (int) Math.floor((double) paddedStream.length() / payloadSize);
+        String data;
+        int length = (int) Math.ceil((double) stream.length() / PAYLOAD_MAX_LENGTH);
         PayloadModel[] payloads = new PayloadModel[length];
-        for (int i = 0; i < length; i++) {
-            payloads[i] = new PayloadModel(paddedStream.substring(i * payloadSize, (i+1) * payloadSize));
+        for (int i = 0, start, end, remaining; i < length; i++) {
+            start = i * PAYLOAD_MAX_LENGTH;
+            remaining = stream.length() - start;
+            end = remaining < PAYLOAD_MAX_LENGTH ? remaining : (i+1) * PAYLOAD_MAX_LENGTH;
+            data = stream.substring(start, end);
+            payloads[i] = new PayloadModel(data, CheckSumManager.computeCheckSum(data));
         }
         return payloads;
     }
@@ -41,7 +37,7 @@ public class DataManager {
     /**
      * Provides the original data.
      * @param packets The received packets.
-     * @return
+     * @return Original data.
      */
     public static String extractDataFromPackets(PacketModel[] packets) {
         String stream = getDataStream(packets);
@@ -53,28 +49,31 @@ public class DataManager {
      * @param packets The received packets.
      */
     private static String getDataStream(PacketModel[] packets) {
-        String stream = "";
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < packets.length; i++) {
-            stream += packets[i].getPayload().toString();
+            sb.append(packets[i].getPayload());
         }
-        return decodeBitsStuffing(stream);
+        return decodeBitsStuffing(sb.toString());
     }
 
+    // --------------------------------------------------------------------
+
+    // Bits stuffing sequence.
+    private static String stuffingSequence = "11111";
+
     /**
-     *
-     * @param stream
+     * Adds a '0' after each occurrence of "11111".
+     * @param stream Stream of bits.
      */
     private static String encodeBitsStuffing(String stream) {
-        String sequence = ConversionManager.convertByteToString(FLAG);
-        return stream.replace(sequence, sequence + sequence);
+        return stream.replace(stuffingSequence, stuffingSequence + "0");
     }
 
     /**
-     *
-     * @param stream
+     * Reverts the bits stuffing (see `encodeBitsStuffing`).
+     * @param stream Stream of bits.
      */
     private static String decodeBitsStuffing(String stream) {
-        String sequence = ConversionManager.convertByteToString(FLAG);
-        return stream.replace(sequence + sequence, sequence);
+        return stream.replace(stuffingSequence + "0", stuffingSequence);
     }
 }

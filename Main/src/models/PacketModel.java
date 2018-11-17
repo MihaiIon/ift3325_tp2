@@ -25,11 +25,11 @@ public class PacketModel {
 
     /**
      * Converts the provided binary data to a PacketModel Object.
-     * @param stream Stream of bites reprensenting the packet.
+     * @param stream Stream of bits representing the packet.
      * @return PacketModel Object.
      */
     public static PacketModel convertToPacket(String stream) {
-        return new PacketModel((byte)0, INFORMATION, new PayloadModel("00000000000000000000000000000000"));
+        return new PacketModel((byte)0, INFORMATION, new PayloadModel("", ""));
     }
 
     /**
@@ -60,34 +60,42 @@ public class PacketModel {
     private byte id;
     private byte type;
     private PayloadModel payload;
-    private CheckSumModal checkSum;
 
     /**
+     * Information frame constructor.
      * @param id Identifies the packet (0-7).
      * @param type Identifies the type of the packet (see class Type).
+     * @param payload Frame's data.
      */
     public PacketModel(byte id, Type type, PayloadModel payload) {
         this.id = id;
         this.type = PacketModel.convertTypeToByte(type);
         this.payload = payload;
-        this.checkSum = new CheckSumModal(payload);
     }
 
     /**
-     * Converts PacketModel object to binary number.
+     * Converts PacketModel object to binary number (String representation).
      */
     public String toBinary() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ConversionManager.convertByteToString(DataManager.FLAG));
+        sb.append(ConversionManager.convertByteToString(type));
         switch (getType()) {
             case INFORMATION:
-                byte[] bytes = new byte[4];
-                bytes[0] = DataManager.FLAG;
-                bytes[1] = this.type;
-                bytes[2] = this.id;
-                bytes[3] = DataManager.FLAG;
-                return ConversionManager.convertBytesToString(bytes);
+                sb.append(ConversionManager.convertByteToString(id));
+                sb.append(payload.toString());
+                break;
+            case PACKET_RECEPTION:
+                break;
+            case REJECTED_PACKET:
+                break;
+            case ENDING_CONNECTION:
+                break;
             default:
-                return "";
+
         }
+        sb.append(ConversionManager.convertByteToString(DataManager.FLAG));
+        return sb.toString();
     }
 
     // ------------------------------------------------------------------------
@@ -121,27 +129,32 @@ public class PacketModel {
         }
     }
 
-    public PayloadModel getPayload() {
-        return payload;
-    }
-    public CheckSumModal getCheckSum() {
-        return checkSum;
+    public PayloadModel getPayload() { return payload; }
+    public String getData() { return payload.getData(); }
+    public String getCheckSum() {
+        return payload.getCheckSum();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("Packet : ");
+        sb.append("\n\ttype : ").append(getType());
         switch (getType()) {
             case INFORMATION:
-                sb.append("Packet : ");
                 sb.append("\n\tid : ").append(getId());
-                sb.append("\n\ttype : ").append(getType());
-                sb.append("\n\tpayload : ").append(ConversionManager.convertStreamToReadableStream(getPayload().toString()));
-                sb.append("\n\tcheckSum : ").append(ConversionManager.convertStreamToReadableStream(getCheckSum().toString()));
-                sb.append("\n\tbinary : IN PROGRESS "/* + ConversionManager.convertStreamToReadableStream(toBinary())*/);
-                return sb.toString();
+                sb.append("\n\tdata : ").append(ConversionManager.convertStreamToReadableStream(getData()));
+                sb.append("\n\tcheckSum : ").append(ConversionManager.convertStreamToReadableStream(getCheckSum()));
+                break;
+            case PACKET_RECEPTION:
+                break;
+            case REJECTED_PACKET:
+                break;
+            case ENDING_CONNECTION:
+                break;
             default:
-                return "";
         }
+        sb.append("\n\tbinary : " + toBinary());
+        return sb.toString();
     }
 }
