@@ -43,6 +43,11 @@ public class Receiver implements SocketMonitorThread.PacketReceptionListener {
     }
 
     @Override
+    public void onPacketReceptionTimeOut() {
+
+    }
+
+    @Override
     public void onPacketReceived(PacketModel packet) {
 
     }

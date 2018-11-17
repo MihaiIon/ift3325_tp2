@@ -1,7 +1,6 @@
 package sender;
 
 import models.PacketModel;
-import models.PayloadModel;
 import networking.SocketMonitorThread;
 
 import java.io.*;
@@ -54,6 +53,11 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onPacketReceptionTimeOut() {
+
     }
 
     @Override
