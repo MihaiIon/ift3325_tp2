@@ -1,6 +1,6 @@
 package receiver;
 
-import models.PacketModel;
+import models.FrameModel;
 import networking.SocketMonitorThread;
 
 import java.io.*;
@@ -48,7 +48,7 @@ public class Receiver implements SocketMonitorThread.PacketReceptionListener {
     }
 
     @Override
-    public void onPacketReceived(PacketModel packet) {
+    public void onPacketReceived(FrameModel packet) {
 
     }
 }

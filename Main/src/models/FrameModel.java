@@ -4,9 +4,9 @@ import managers.CheckSumManager;
 import managers.ConversionManager;
 import managers.DataManager;
 
-import static models.PacketModel.Type.INFORMATION;
+import static models.FrameModel.Type.INFORMATION;
 
-public class PacketModel {
+public class FrameModel {
 
     // ------------------------------------------------------------------------
     // Static
@@ -17,19 +17,26 @@ public class PacketModel {
      */
     public enum Type {
         INFORMATION,
-        CONNECTION_REQUEST,
-        PACKET_RECEPTION,
-        REJECTED_PACKET,
+        CONNECTION_REQUEST, FRAME_RECEPTION, REJECTED_FRAME,
         ENDING_CONNECTION,
         P_BITS
     }
 
     /**
-     * Converts the provided binary data to a PacketModel Object.
-     * @param stream Stream of bits representing the packet.
-     * @return PacketModel Object.
+     * Checks if the frame is damaged.
+     * @param stream Stream of bits representing the Frame.
+     * @return Returns TRUE is the Frame is valid.
      */
-    public static PacketModel convertToPacket(String stream) {
+    public static boolean isFrameValid(String stream) {
+        return true;
+    }
+
+    /**
+     * Converts the provided binary data to a FrameModel Object.
+     * @param stream Stream of bits representing the Frame.
+     * @return FrameModel Object.
+     */
+    public static FrameModel convertToFrame(String stream) {
         // Save lengths
         int streamLength = stream.length();
         int generatorLength = CheckSumManager.generator.length();
@@ -41,23 +48,23 @@ public class PacketModel {
                 byte id = ConversionManager.convertStringToByte(stream.substring(8, 16));
                 String data = stream.substring(16, streamLength - generatorLength);
                 String checkSum = stream.substring(streamLength - generatorLength);
-                return new PacketModel(id, type, new PayloadModel(data, checkSum));
+                return new FrameModel(id, type, new PayloadModel(data, checkSum));
             case CONNECTION_REQUEST:
-                return new PacketModel((byte)0, type, new PayloadModel("", ""));
-            case PACKET_RECEPTION:
-                return new PacketModel((byte)0, type, new PayloadModel("", ""));
-            case REJECTED_PACKET:
-                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+            case FRAME_RECEPTION:
+                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+            case REJECTED_FRAME:
+                return new FrameModel((byte)0, type, new PayloadModel("", ""));
             case ENDING_CONNECTION:
-                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+                return new FrameModel((byte)0, type, new PayloadModel("", ""));
             default:
-                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+                return new FrameModel((byte)0, type, new PayloadModel("", ""));
         }
     }
 
     /**
-     * @param type The type of the packet.
-     * @return Encodes the type of the packet on 8 bits (byte).
+     * @param type The type of the Frame.
+     * @return Encodes the type of the Frame on 8 bits (byte).
      */
     private static byte convertTypeToByte(Type type) {
         switch (type) {
@@ -65,9 +72,9 @@ public class PacketModel {
                 return (byte) 'I';
             case CONNECTION_REQUEST:
                 return (byte) 'C';
-            case PACKET_RECEPTION:
+            case FRAME_RECEPTION:
                 return (byte) 'A';
-            case REJECTED_PACKET:
+            case REJECTED_FRAME:
                 return (byte) 'R';
             case ENDING_CONNECTION:
                 return (byte) 'F';
@@ -94,19 +101,19 @@ public class PacketModel {
     private PayloadModel payload;
 
     /**
-     * Information frame constructor.
-     * @param id Identifies the packet (0-7).
-     * @param type Identifies the type of the packet (see class Type).
+     * Information Frame constructor.
+     * @param id Identifies the Frame (0-7).
+     * @param type Identifies the type of the Frame (see class Type).
      * @param payload Frame's data.
      */
-    public PacketModel(byte id, Type type, PayloadModel payload) {
+    public FrameModel(byte id, Type type, PayloadModel payload) {
         this.id = id;
-        this.type = PacketModel.convertTypeToByte(type);
+        this.type = FrameModel.convertTypeToByte(type);
         this.payload = payload;
     }
 
     /**
-     * Converts PacketModel object to binary number (String representation).
+     * Converts FrameModel object to binary number (String representation).
      */
     public String toBinary() {
         StringBuilder sb = new StringBuilder();
@@ -117,9 +124,9 @@ public class PacketModel {
                 sb.append(ConversionManager.convertByteToString(id));
                 sb.append(payload.toString());
                 break;
-            case PACKET_RECEPTION:
+            case FRAME_RECEPTION:
                 break;
-            case REJECTED_PACKET:
+            case REJECTED_FRAME:
                 break;
             case ENDING_CONNECTION:
                 break;
@@ -134,14 +141,14 @@ public class PacketModel {
     // Getters
 
     /**
-     * @return Provides the identifier of the packet.
+     * @return Provides the identifier of the Frame.
      */
     public int getId() {
         return this.id;
     }
 
     /**
-     * @return Provides the type of the packet.
+     * @return Provides the type of the Frame.
      */
     public Type getType() {
         char type = (char) (this.type & 0xFF);
@@ -151,9 +158,9 @@ public class PacketModel {
             case 'C':
                 return Type.CONNECTION_REQUEST;
             case 'A':
-                return Type.PACKET_RECEPTION;
+                return Type.FRAME_RECEPTION;
             case 'R':
-                return Type.REJECTED_PACKET;
+                return Type.REJECTED_FRAME;
             case 'F':
                 return Type.ENDING_CONNECTION;
             default:
@@ -170,7 +177,7 @@ public class PacketModel {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Packet : ");
+        sb.append("Frame : ");
         sb.append("\n\ttype : ").append(getType());
         switch (getType()) {
             case INFORMATION:
@@ -178,9 +185,9 @@ public class PacketModel {
                 sb.append("\n\tdata : ").append(ConversionManager.convertStreamToReadableStream(getData()));
                 sb.append("\n\tcheckSum : ").append(ConversionManager.convertStreamToReadableStream(getCheckSum()));
                 break;
-            case PACKET_RECEPTION:
+            case FRAME_RECEPTION:
                 break;
-            case REJECTED_PACKET:
+            case REJECTED_FRAME:
                 break;
             case ENDING_CONNECTION:
                 break;

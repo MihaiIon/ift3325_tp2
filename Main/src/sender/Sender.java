@@ -1,6 +1,6 @@
 package sender;
 
-import models.PacketModel;
+import models.FrameModel;
 import networking.SocketMonitorThread;
 
 import java.io.*;
@@ -18,7 +18,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     private Socket socket;
     private DataOutputStream out;
 
-    private ArrayList<PacketModel> unconfirmedPackets = new ArrayList<>();
+    private ArrayList<FrameModel> unconfirmedPackets = new ArrayList<>();
 
     public Sender(String hostname, int port, int backN) {
         position.set(0);
@@ -61,11 +61,11 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     }
 
     @Override
-    public void onPacketReceived(PacketModel packet) {
+    public void onPacketReceived(FrameModel packet) {
         switch (packet.getType()) {
-            case PACKET_RECEPTION: {
+            case FRAME_RECEPTION: {
                 confirmPackets(position.get(), packet.getId());
-                for (PacketModel p: unconfirmedPackets) {
+                for (FrameModel p: unconfirmedPackets) {
 //                    try {
 //                        sendPacket(p);
 //                    } catch (IOException e) {
@@ -75,7 +75,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
 
                 break;
             }
-            case REJECTED_PACKET: {
+            case REJECTED_FRAME: {
 
                 break;
             }
@@ -83,13 +83,13 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     }
 
     private void sendData(String data) throws IOException {
-        //PacketModel packet = new PacketModel((byte)'a', PacketModel.Type.INFORMATION, new PayloadModel(data)); //TODO byte[1] remplacer par num de trame
+        //FrameModel packet = new FrameModel((byte)'a', FrameModel.Type.INFORMATION, new PayloadModel(data)); //TODO byte[1] remplacer par num de trame
         //unconfirmedPackets.add(packet);
         //out.write(packet.toBinary().getBytes());
         out.writeUTF(data);
     }
 
-    private void sendPacket(PacketModel p) throws IOException {
+    private void sendPacket(FrameModel p) throws IOException {
         unconfirmedPackets.add(p);
      //   out.write(p.toBinary().getBytes());
     }
@@ -97,7 +97,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     private void confirmPackets(int from, int to) {
         int confirmPosition = from;
         while (confirmPosition != to) {
-            unconfirmedPackets = (ArrayList<PacketModel>) unconfirmedPackets.stream().filter(x -> x.getId() != position.get()).collect(Collectors.toList());
+            unconfirmedPackets = (ArrayList<FrameModel>) unconfirmedPackets.stream().filter(x -> x.getId() != position.get()).collect(Collectors.toList());
             confirmPosition = nextPos(position.get());
         }
     }

@@ -1,7 +1,7 @@
 package managers;
 
 
-import models.PacketModel;
+import models.FrameModel;
 import models.PayloadModel;
 
 public class DataManager {
@@ -39,7 +39,7 @@ public class DataManager {
      * @param packets The received packets.
      * @return Original data.
      */
-    public static String extractDataFromPackets(PacketModel[] packets) {
+    public static String extractDataFromPackets(FrameModel[] packets) {
         String stream = getDataStream(packets);
         return ConversionManager.convertBitsStreamToData(stream);
     }
@@ -48,7 +48,7 @@ public class DataManager {
      * Provides the original stream (without bits stuffing).
      * @param packets The received packets.
      */
-    private static String getDataStream(PacketModel[] packets) {
+    private static String getDataStream(FrameModel[] packets) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < packets.length; i++) {
             sb.append(packets[i].getPayload());

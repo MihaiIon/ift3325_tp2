@@ -1,6 +1,6 @@
 package networking;
 
-import models.PacketModel;
+import models.FrameModel;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -68,7 +68,7 @@ public class SocketMonitorThread extends Thread {
 
 
     public interface PacketReceptionListener {
-        void onPacketReceived(PacketModel packet);
+        void onPacketReceived(FrameModel packet);
 
         void onPacketReceptionTimeOut();
     }
