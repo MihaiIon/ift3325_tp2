@@ -3,7 +3,7 @@ package managers;
 public class CheckSumManager {
 
     // Attributes.
-    private static String generator = "1000100000010001";
+    public static String generator = "1000100000010001";
     private static String padding = new String(new char[generator.length()]).replace("\0", "0");
 
     /**

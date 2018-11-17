@@ -27,7 +27,7 @@ public class DataManager {
         for (int i = 0, start, end, remaining; i < length; i++) {
             start = i * PAYLOAD_MAX_LENGTH;
             remaining = stream.length() - start;
-            end = remaining < PAYLOAD_MAX_LENGTH ? remaining : (i+1) * PAYLOAD_MAX_LENGTH;
+            end = remaining < PAYLOAD_MAX_LENGTH ? stream.length() : (i+1) * PAYLOAD_MAX_LENGTH;
             data = stream.substring(start, end);
             payloads[i] = new PayloadModel(data, CheckSumManager.computeCheckSum(data));
         }

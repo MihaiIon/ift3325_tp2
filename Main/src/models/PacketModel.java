@@ -1,5 +1,6 @@
 package models;
 
+import managers.CheckSumManager;
 import managers.ConversionManager;
 import managers.DataManager;
 
@@ -29,7 +30,29 @@ public class PacketModel {
      * @return PacketModel Object.
      */
     public static PacketModel convertToPacket(String stream) {
-        return new PacketModel((byte)0, INFORMATION, new PayloadModel("", ""));
+        // Save lengths
+        int streamLength = stream.length();
+        int generatorLength = CheckSumManager.generator.length();
+        // Parse type
+        Type type = parseType(stream.substring(0, 8));
+        // Parse Frame
+        switch (type) {
+            case INFORMATION:
+                byte id = ConversionManager.convertStringToByte(stream.substring(8, 16));
+                String data = stream.substring(16, streamLength - generatorLength);
+                String checkSum = stream.substring(streamLength - generatorLength);
+                return new PacketModel(id, type, new PayloadModel(data, checkSum));
+            case CONNECTION_REQUEST:
+                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+            case PACKET_RECEPTION:
+                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+            case REJECTED_PACKET:
+                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+            case ENDING_CONNECTION:
+                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+            default:
+                return new PacketModel((byte)0, type, new PayloadModel("", ""));
+        }
     }
 
     /**
@@ -51,6 +74,15 @@ public class PacketModel {
             default:
                 return (byte) 'P';
         }
+    }
+
+    /**
+     *
+     * @param byteStream
+     * @return
+     */
+    private static Type parseType (String byteStream) {
+        return Type.INFORMATION;
     }
 
     // ------------------------------------------------------------------------

@@ -17,13 +17,20 @@ public class TestManager {
         // Build payloads
         PayloadModel[] payloads = DataManager.splitMessageToPayloads(message);
 
-        // Create Packets
+        // Create Frames
         PacketModel[] packetsSent = new PacketModel[payloads.length];
         for (int i = 0; i < packetsSent.length; i++) {
             byte id = (byte)(i%8);
             packetsSent[i] = new PacketModel(id, PacketModel.Type.INFORMATION, payloads[i]);
             System.out.println("== Packet Created ==");
             System.out.println(packetsSent[i].toString());
+        }
+
+        // Create Stream
+        PacketModel[] packetsReceived = new PacketModel[packetsSent.length];
+        for (int i = 0; i < packetsReceived.length; i++) {
+            packetsReceived[i] = PacketModel.convertToPacket(packetsSent[i].toBinary());
+
         }
     }
 
