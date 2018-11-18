@@ -2,9 +2,7 @@ package networking;
 
 import factories.FrameFactory;
 import models.FrameModel;
-import models.FrameWindowModel;
 import models.TypeModel;
-import networking.SocketController;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -34,7 +32,7 @@ public class Receiver extends SocketController {
 
     public void packetsReceived(ArrayList<FrameModel> packetModels) {
         isBusy.set(true);
-        packetModels.stream().forEach(stream -> {
+        packetModels.forEach(stream -> {
             if(stream.getType() == TypeModel.Type.CONNECTION_REQUEST) {
                 if (isOpen) {
                     System.out.println("Connection request but connection is already open.");
@@ -53,7 +51,7 @@ public class Receiver extends SocketController {
                     }
                     case INFORMATION: {
                         FrameModel frameModel = FrameFactory.createReceptionFrame(getCurrentPosition());
-                        sendData(frameModel);
+                        sendFrame(frameModel);
                         break;
                     }
                     case REJECTED_FRAME: {
@@ -78,7 +76,7 @@ public class Receiver extends SocketController {
     public void timeOutReached(int position) {
         isBusy.set(true);
         FrameModel frame = FrameFactory.createReceptionFrame(getCurrentPosition());
-        sendData(frame);
+        sendFrame(frame);
         isBusy.set(false);
     }
 

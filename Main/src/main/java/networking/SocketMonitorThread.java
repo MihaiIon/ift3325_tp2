@@ -30,8 +30,13 @@ public class SocketMonitorThread extends Thread {
 
     private AtomicInteger packetsReceived = new AtomicInteger(0);
 
-    /*
+
+    /**
      * Construit un moniteur de socket qui surveille les frames recues
+     *
+     * @param socket le socket a surveiller
+     * @param socketController le controller du socket
+     * @throws IOException if a exception is happening with the socket
      */
     SocketMonitorThread(Socket socket, SocketController socketController) throws IOException {
         in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));

@@ -28,6 +28,11 @@ public abstract class SocketController {
 
     public abstract void timeOutReached(int position);
 
+    /**
+     * Do the initial configuration of the socket being controlled
+     * @param socket the socket to configure and add a listener for incoming requests
+     * @throws IOException if anything is wrong with the socket
+     */
     void configureSocket(Socket socket) throws IOException {
         out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
@@ -43,6 +48,9 @@ public abstract class SocketController {
         socketMonitor.start();
     }
 
+    /**
+     * Close all the remaining resources for the current socket controller
+     */
     public void close() {
         if(out != null) {
             try {
@@ -63,7 +71,11 @@ public abstract class SocketController {
         }
     }
 
-    void sendData(FrameModel frame) {
+    /**
+     * Sends a frame throught a socket
+     * @param frame the frame to send throught the socket
+     */
+    void sendFrame(FrameModel frame) {
         try {
             out.writeUTF(frame.toBinary());
         } catch (Exception e) {

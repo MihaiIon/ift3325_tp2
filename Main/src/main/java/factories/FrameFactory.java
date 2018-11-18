@@ -12,8 +12,8 @@ public class FrameFactory {
         return new RequestFrameModel(RequestFrameModel.RequestType.CLOSE_CONNEXION);
     }
 
-    public static FrameModel createInformationFrame(int id, String data) {
-        return new InformationFrameModel(id, data);
+    public static FrameModel createInformationFrame(int id, String binaryData) {
+        return new InformationFrameModel(id, binaryData);
     }
 
     public static FrameModel createReceptionFrame(int receivedFrameId) {
