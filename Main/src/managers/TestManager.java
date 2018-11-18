@@ -39,8 +39,9 @@ public class TestManager {
             System.out.println("== Frame Created ==");
             receivedFrame = FrameModel.convertStreamToFrame(frame.toBinary());
             if (receivedFrame != null && !receivedFrame.hasErrors()) {
-                window.addFrame(receivedFrame);
-                System.out.println(receivedFrame);
+                if(window.addFrame(receivedFrame)){
+                    System.out.println(receivedFrame);
+                }
             } else {
                 System.out.println("Something went wrong");
                 System.exit(0);

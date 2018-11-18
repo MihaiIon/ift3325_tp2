@@ -16,11 +16,11 @@ public class FrameFactory {
         return new InformationFrameModel(id, data);
     }
 
-    public static FrameModel createReceptionFrame(byte receivedFrameId) {
+    public static FrameModel createReceptionFrame(int receivedFrameId) {
         return new ReceptionFrameModel(receivedFrameId);
     }
 
-    public static FrameModel createRejectionFrame(byte rejectedFrameId) {
+    public static FrameModel createRejectionFrame(int rejectedFrameId) {
         return new ReceptionFrameModel(rejectedFrameId);
     }
 }

@@ -12,7 +12,8 @@ public class DataManager {
     public static byte FLAG = (byte) 126;
 
     // Sets the size (in bytes) of each payloads.
-    private static int PAYLOAD_MAX_LENGTH = 256;
+    private static int CHARACTER_SIZE = 8;
+    private static int PAYLOAD_MAX_LENGTH = CHARACTER_SIZE * 32;
 
     /**
      * Splits the provided <message> into Information Frames.

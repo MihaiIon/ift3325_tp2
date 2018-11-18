@@ -23,8 +23,12 @@ public class FrameWindowModel {
     public boolean addFrame(FrameModel frame) {
         int id = ((InformationFrameModel) frame).getId();
         if (id == 0) {
-            frames[0] = frame;
-            return true;
+            if(frames[0] == null) {
+                frames[0] = frame;
+                return true;
+            }
+            System.out.println("ERROR : Frame #" + id + " has been already received.");
+            return false;
         }
         if (frames[id-1] == null) {
             System.out.println("ERROR : Missing frame #" + (id-1) + ".");
@@ -35,7 +39,7 @@ public class FrameWindowModel {
             return false;
         }
         frames[id] = frame;
-        return false;
+        return true;
     }
 
     /**

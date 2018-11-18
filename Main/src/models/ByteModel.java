@@ -13,7 +13,7 @@ public class ByteModel {
     }
 
     public ByteModel (int i) {
-        value = (byte)i;
+        value = (byte)(i & 0xFF);
         binary = ConversionManager.convertByteToString(value);
     }
 
