@@ -5,31 +5,30 @@ import models.InformationFrameModel;
 
 public class TestManager {
 
-    /**
-     *
-     * @param message
-     */
     public static void testMessageTransmission(String message) {
         System.out.println("\n==================================================================");
         System.out.println("Testing Data : " + message);
         System.out.println("==================================================================");
 
         // Build payloads
-        String[] payloads = DataManager.splitMessageToPayloads(message);
+        String[] payloads = DataManager.splitMessageIntoPayloads(message);
 
         // Create Frames
-        FrameModel[] packetsSent = new FrameModel[payloads.length];
-        for (int i = 0; i < packetsSent.length; i++) {
-            packetsSent[i] = new InformationFrameModel(i, payloads[i]);
+        System.out.println("== Sending Frames ==");
+        FrameModel[] framesSent = new FrameModel[payloads.length];
+        for (int i = 0; i < framesSent.length; i++) {
+            framesSent[i] = new InformationFrameModel(i, payloads[i]);
             System.out.println("== Frame Created ==");
-            System.out.println(packetsSent[i].toString());
+            System.out.println(framesSent[i]);
         }
 
         // Create Stream
-        FrameModel[] packetsReceived = new FrameModel[packetsSent.length];
-        for (int i = 0; i < packetsReceived.length; i++) {
-            packetsReceived[i] = FrameModel.convertStreamToFrame(packetsSent[i].toBinary());
-
+        System.out.println("\n== Receiving Frames ==");
+        FrameModel[] framesReceived = new FrameModel[framesSent.length];
+        for (int i = 0; i < framesReceived.length; i++) {
+            framesReceived[i] = FrameModel.convertStreamToFrame(framesSent[i].toBinary());
+            System.out.println("== Frame Created ==");
+            System.out.println(framesReceived[i]);
         }
     }
 

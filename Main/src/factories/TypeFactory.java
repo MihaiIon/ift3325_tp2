@@ -18,7 +18,7 @@ public class TypeFactory {
                 return new TypeModel(type, 'A');
             case REJECTED_FRAME:
                 return new TypeModel(type, 'R');
-            case ENDING_CONNECTION:
+            case TERMINATE_CONNECTION_REQUEST:
                 return new TypeModel(type, 'F');
             default:
                 return new TypeModel(type, 'P');

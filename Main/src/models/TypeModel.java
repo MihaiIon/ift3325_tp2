@@ -13,7 +13,7 @@ public class TypeModel {
         CONNECTION_REQUEST,
         FRAME_RECEPTION,
         REJECTED_FRAME,
-        ENDING_CONNECTION,
+        TERMINATE_CONNECTION_REQUEST,
         P_BITS
     }
 
@@ -33,7 +33,7 @@ public class TypeModel {
             case (byte)'R':
                 return Type.REJECTED_FRAME;
             case (byte)'F':
-                return Type.ENDING_CONNECTION;
+                return Type.TERMINATE_CONNECTION_REQUEST;
             default:
                 return Type.P_BITS;
         }

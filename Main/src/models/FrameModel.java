@@ -6,6 +6,8 @@ import managers.ConversionManager;
 import managers.DataManager;
 
 import static models.TypeModel.Type;
+import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
+import static models.RequestFrameModel.RequestType.CLOSE_CONNEXION;
 
 public class FrameModel {
 
@@ -54,13 +56,13 @@ public class FrameModel {
                 String data = stream.substring(fLength + 16, length - gLength - fLength);
                 return new InformationFrameModel(metadata, data, checkSum);
             case CONNECTION_REQUEST:
-                return new ConnexionRequestFrame(metadata, checkSum);
+                return new RequestFrameModel(OPEN_CONNEXION, checkSum);
             case FRAME_RECEPTION:
-//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+                return new ReceptionFrameModel(metadata, checkSum);
             case REJECTED_FRAME:
-//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
-            case ENDING_CONNECTION:
-//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+                return new RejectionFrameModel(metadata, checkSum);
+            case TERMINATE_CONNECTION_REQUEST:
+                return new RequestFrameModel(CLOSE_CONNEXION, checkSum);
             default:
                 return null;
         }

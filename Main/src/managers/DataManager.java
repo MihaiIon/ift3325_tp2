@@ -15,7 +15,7 @@ public class DataManager {
      * Splits the data in smaller payloads. Each Frame contains one (1) payload.
      * @param message The message to be sent to the receiver.
      */
-    public static String[] splitMessageToPayloads(String message) {
+    public static String[] splitMessageIntoPayloads(String message) {
         // Transform data into a stream of bits
         String stream = ConversionManager.convertDataToBitsStream(message);
         // Create payloads
