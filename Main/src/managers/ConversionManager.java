@@ -14,15 +14,6 @@ public class ConversionManager {
     }
 
     /**
-     * @param stream Stream of bits.
-     * @return Provides the data that was originally sent.
-     */
-    public static String convertBitsStreamToData(String stream) {
-        String data = "";
-        return data;
-    }
-
-    /**
      * @param b Byte to be converted to String.
      * @return Provides a String of bits representing the byte.
      */
