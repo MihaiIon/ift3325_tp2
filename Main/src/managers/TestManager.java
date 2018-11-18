@@ -1,5 +1,6 @@
 package managers;
 
+import factories.FrameFactory;
 import models.FrameModel;
 import models.InformationFrameModel;
 
@@ -7,7 +8,7 @@ public class TestManager {
 
     public static void testMessageTransmission(String message) {
         System.out.println("\n==================================================================");
-        System.out.println("Testing Data : " + message);
+        System.out.println("\tTesting Data : " + message);
         System.out.println("==================================================================");
 
         // Build payloads
@@ -17,7 +18,7 @@ public class TestManager {
         System.out.println("== Sending Frames ==");
         FrameModel[] framesSent = new FrameModel[payloads.length];
         for (int i = 0; i < framesSent.length; i++) {
-            framesSent[i] = new InformationFrameModel(i, payloads[i]);
+            framesSent[i] = FrameFactory.createInformationFrame(i, payloads[i]);
             System.out.println("== Frame Created ==");
             System.out.println(framesSent[i]);
         }
@@ -34,7 +35,7 @@ public class TestManager {
 
     public static void testChecksum() {
         System.out.println("\n==================================================================");
-        System.out.println("Testing CheckSumManager.computeCheckSum()");
+        System.out.println("\tTesting CheckSumManager.computeCheckSum()");
         System.out.println("==================================================================");
 
         // Test 1

@@ -12,7 +12,7 @@ public class FrameFactory {
         return new RequestFrameModel(RequestFrameModel.RequestType.CLOSE_CONNEXION);
     }
 
-    public static FrameModel createInformationFrame(byte id, String data) {
+    public static FrameModel createInformationFrame(int id, String data) {
         return new InformationFrameModel(id, data);
     }
 
