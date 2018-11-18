@@ -9,7 +9,7 @@ public class RejectionFrameModel extends FrameModel {
      * @param rejectedFrameId Identifier of the rejected Frame.
      */
     public RejectionFrameModel(byte rejectedFrameId) {
-        super(TypeModel.Type.REJECTED_FRAME, ConversionManager.convertByteToString(rejectedFrameId));
+        super(TypeModel.Type.REJECTED_FRAME, new ByteModel(rejectedFrameId));
     }
 
     /**
@@ -18,11 +18,11 @@ public class RejectionFrameModel extends FrameModel {
      * @param checksum Frame's checkSum.
      */
     public RejectionFrameModel(byte rejectedFrameId, String checksum) {
-        super(TypeModel.Type.REJECTED_FRAME, ConversionManager.convertByteToString(rejectedFrameId), "", checksum);
+        super(TypeModel.Type.REJECTED_FRAME, new ByteModel(rejectedFrameId), "", checksum);
     }
 
     // ------------------------------------------------------------------------
     // Getters
 
-    public int getRejectedFrameId() { return (int) ConversionManager.convertStringToByte(getMetadata()); }
+    public int getRejectedFrameId() { return getMetadata().toInt(); }
 }

@@ -9,7 +9,7 @@ public class ReceptionFrameModel extends FrameModel {
      * @param receivedFrameId Identifier of the received Frame.
      */
     public ReceptionFrameModel(byte receivedFrameId) {
-        super(TypeModel.Type.FRAME_RECEPTION, ConversionManager.convertByteToString(receivedFrameId));
+        super(TypeModel.Type.FRAME_RECEPTION, new ByteModel(receivedFrameId));
     }
 
     /**
@@ -18,11 +18,11 @@ public class ReceptionFrameModel extends FrameModel {
      * @param checksum Frame's checkSum.
      */
     public ReceptionFrameModel(byte receivedFrameId, String checksum) {
-        super(TypeModel.Type.FRAME_RECEPTION, ConversionManager.convertByteToString(receivedFrameId), "", checksum);
+        super(TypeModel.Type.FRAME_RECEPTION, new ByteModel(receivedFrameId), "", checksum);
     }
 
     // ------------------------------------------------------------------------
     // Getters
 
-    public int getRecievedFrameId() { return (int) ConversionManager.convertStringToByte(getMetadata()); }
+    public int getRecievedFrameId() { return getMetadata().toInt(); }
 }

@@ -21,7 +21,7 @@ public class RequestFrameModel extends FrameModel {
             requestType == OPEN_CONNEXION
                 ? CONNECTION_REQUEST
                 : TERMINATE_CONNECTION_REQUEST,
-            "00000000"
+            new ByteModel(0)
         );
     }
 
@@ -34,7 +34,7 @@ public class RequestFrameModel extends FrameModel {
             requestType == OPEN_CONNEXION
                 ? CONNECTION_REQUEST
                 : TERMINATE_CONNECTION_REQUEST,
-            "00000000",
+            new ByteModel(0),
             "",
             checksum
         );

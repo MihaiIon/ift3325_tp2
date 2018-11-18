@@ -77,31 +77,31 @@ public class FrameModel {
 
     // Attributes
     private TypeModel type;
-    private String metadata;
+    private ByteModel metadata;
     private String data;
     private String checkSum;
 
     /**
      * Default constructor.
-     * @param type Frame's metadata.
+     * @param t Frame's metadata.
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type type, String metadata, String data) {
-        this.type = TypeFactory.createTypeModel(type);
+    public FrameModel(Type t, ByteModel metadata, String data) {
+        this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = data;
-        this.checkSum = CheckSumManager.computeCheckSum(this.type.getBinaryValue(), metadata, data);
+        this.checkSum = CheckSumManager.computeCheckSum(type.toBinary(), metadata.toBinary(), data);
     }
 
     /**
      * Default constructor (+ computed checksum).
-     * @param type Frame's metadata.
+     * @param t Frame's metadata.
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type type, String metadata, String data, String checkSum) {
-        this.type = TypeFactory.createTypeModel(type);
+    public FrameModel(Type t, ByteModel metadata, String data, String checkSum) {
+        this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = data;
         this.checkSum = checkSum;
@@ -109,14 +109,14 @@ public class FrameModel {
 
     /**
      * No data constructor.
-     * @param type Frame's metadata.
+     * @param t Frame's metadata.
      * @param metadata Frame's metadata.
      */
-    public FrameModel(Type type, String metadata) {
-        this.type = TypeFactory.createTypeModel(type);
+    public FrameModel(Type t, ByteModel metadata) {
+        this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = "";
-        this.checkSum = CheckSumManager.computeCheckSum(this.type.getBinaryValue(), metadata, data);
+        this.checkSum = CheckSumManager.computeCheckSum(type.toBinary(), metadata.toBinary(), data);
     }
 
     // ------------------------------------------------------------------------
@@ -137,11 +137,11 @@ public class FrameModel {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
         String output = "Frame :";
         output += "\n\ttype : " + getType();
-        output += "\n\ttype value : " + type.getBinaryValue();
-        output += "\n\tmetadata : " + metadata;
+        output += "\n\ttype (binary) : " + type.toBinary();
+        output += "\n\tmetadata : " + metadata.getValue();
+        output += "\n\tmetadata (binary) : " + metadata.toBinary();
         output += "\n\tdata : " + ConversionManager.convertStreamToReadableStream(data);
         output += "\n\tcheckSum : " + ConversionManager.convertStreamToReadableStream(checkSum);
         output += "\n\tbinary : " + toBinary();
@@ -154,7 +154,7 @@ public class FrameModel {
 
     public Type getType() { return type.getType(); }
     public TypeModel getTypeModel() { return type; }
-    public String getMetadata() {
+    public ByteModel getMetadata() {
         return metadata;
     }
     public String getData() { return data; }
@@ -162,6 +162,6 @@ public class FrameModel {
         return checkSum;
     }
     public String getFrameContent() {
-        return type.getBinaryValue() + metadata + data + checkSum;
+        return type.toBinary() + metadata.toBinary() + data + checkSum;
     }
 }
