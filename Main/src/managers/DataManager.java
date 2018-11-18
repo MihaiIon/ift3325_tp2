@@ -1,7 +1,10 @@
 package managers;
 
-
+import factories.FrameFactory;
 import models.FrameModel;
+import models.FrameWindowModel;
+
+import java.util.ArrayList;
 
 public class DataManager {
 
@@ -12,12 +15,25 @@ public class DataManager {
     private static int PAYLOAD_MAX_LENGTH = 256;
 
     /**
+     * Splits the provided <message> into Information Frames.
+     * @param message The message to be sent to the receiver.
+     */
+    public static FrameModel[] splitMessageIntoFrames(String message) {
+        String[] payloads = splitMessageIntoPayloads(message);
+        FrameModel[] frames = new FrameModel[payloads.length];
+        for (int i = 0; i < frames.length; i++) {
+            frames[i] = FrameFactory.createInformationFrame(i, payloads[i]);
+        }
+        return frames;
+    }
+
+    /**
      * Splits the data in smaller payloads. Each Frame contains one (1) payload.
      * @param message The message to be sent to the receiver.
      */
-    public static String[] splitMessageIntoPayloads(String message) {
+    private static String[] splitMessageIntoPayloads(String message) {
         // Transform data into a stream of bits
-        String stream = ConversionManager.convertDataToBitsStream(message);
+        String stream = ConversionManager.convertMessageToStream(message);
         // Create payloads
         String data;
         int length = (int) Math.ceil((double) stream.length() / PAYLOAD_MAX_LENGTH);
@@ -34,10 +50,17 @@ public class DataManager {
 
     /**
      *
-     * @param frames
+     * @param windows
      */
-    public static String extractMessageFromFrames(FrameModel[] frames) {
-        return "TODO";
+    public static String extractMessageFromFrames(ArrayList<FrameWindowModel> windows) {
+        StringBuilder message = new StringBuilder();
+        for (FrameWindowModel window : windows) {
+            for (FrameModel frame : window.getFrames()) {
+                if (frame == null) break;
+                message.append(ConversionManager.convertStreamToMessage(frame.getData()));
+            }
+        }
+        return message.toString();
     }
 
     // --------------------------------------------------------------------

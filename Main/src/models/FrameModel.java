@@ -29,7 +29,7 @@ public class FrameModel {
             // Starts and ends with a Flag.
             if(flag.equals(start) && flag.equals(end)){
                 String frameContent = stream.substring(fLength, length - fLength);
-                return CheckSumManager.isFramContentValid(frameContent);
+                return CheckSumManager.isFrameContentValid(frameContent);
             }
             return false;
         }
@@ -43,17 +43,19 @@ public class FrameModel {
      */
     public static FrameModel convertStreamToFrame(String stream) {
         // Save lengths
-        int length = stream.length();
         int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
         int gLength = CheckSumManager.generator.length();
+        // Remove stuffed Bits
+        String frameContent = DataManager.removedBitsStuffing(stream.substring(fLength, stream.length() - fLength));
+        int length = frameContent.length();
         // Parse info
-        Type type = TypeModel.parseType(stream.substring(fLength, fLength + 8));
-        byte metadata = ConversionManager.convertStringToByte(stream.substring(fLength + 8, fLength + 16));
-        String checkSum = stream.substring(length - gLength - fLength, length - fLength);
+        Type type = TypeModel.parseType(frameContent.substring(0, 8));
+        byte metadata = ConversionManager.convertStringToByte(frameContent.substring(8, 16));
+        String checkSum = frameContent.substring(length - gLength);
         // Parse Frame
         switch (type) {
             case INFORMATION:
-                String data = stream.substring(fLength + 16, length - gLength - fLength);
+                String data = frameContent.substring(16, length - gLength);
                 return new InformationFrameModel(metadata, data, checkSum);
             case CONNECTION_REQUEST:
                 return new RequestFrameModel(OPEN_CONNEXION, checkSum);
@@ -63,6 +65,8 @@ public class FrameModel {
                 return new RejectionFrameModel(metadata, checkSum);
             case TERMINATE_CONNECTION_REQUEST:
                 return new RequestFrameModel(CLOSE_CONNEXION, checkSum);
+            case P_BITS:
+                return null;
             default:
                 return null;
         }
@@ -72,8 +76,8 @@ public class FrameModel {
     // Frame Model
 
     // Attributes
-    private byte metadata;
     private TypeModel type;
+    private String metadata;
     private String data;
     private String checkSum;
 
@@ -83,11 +87,11 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type type, byte metadata, String data) {
+    public FrameModel(Type type, String metadata, String data) {
         this.type = TypeFactory.createTypeModel(type);
         this.metadata = metadata;
         this.data = data;
-        this.checkSum = CheckSumManager.computeCheckSum(this.type.getValue(), metadata, data);
+        this.checkSum = CheckSumManager.computeCheckSum(this.type.getBinaryValue(), metadata, data);
     }
 
     /**
@@ -96,7 +100,7 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type type, byte metadata, String data, String checkSum) {
+    public FrameModel(Type type, String metadata, String data, String checkSum) {
         this.type = TypeFactory.createTypeModel(type);
         this.metadata = metadata;
         this.data = data;
@@ -108,26 +112,27 @@ public class FrameModel {
      * @param type Frame's metadata.
      * @param metadata Frame's metadata.
      */
-    public FrameModel(Type type, byte metadata) {
+    public FrameModel(Type type, String metadata) {
         this.type = TypeFactory.createTypeModel(type);
         this.metadata = metadata;
         this.data = "";
-        this.checkSum = CheckSumManager.computeCheckSum(this.type.getValue(), metadata, data);
+        this.checkSum = CheckSumManager.computeCheckSum(this.type.getBinaryValue(), metadata, data);
     }
 
     // ------------------------------------------------------------------------
     // Methods
+
+    public boolean hasErrors() {
+        return !CheckSumManager.isFrameContentValid(getFrameContent());
+    }
 
     /**
      * Converts FrameModel object to binary number (String representation).
      */
     public String toBinary() {
         String flag = ConversionManager.convertByteToString(DataManager.FLAG);
-        String frameContent = ConversionManager.convertByteToString(type.getValue());
-        frameContent += ConversionManager.convertByteToString(metadata);
-        frameContent += data + checkSum;
-        frameContent = DataManager.addBitsStuffing(frameContent);
-        return flag + frameContent + flag;
+        String content = DataManager.addBitsStuffing(getFrameContent());
+        return flag + content + flag;
     }
 
     @Override
@@ -135,6 +140,7 @@ public class FrameModel {
         StringBuilder sb = new StringBuilder();
         String output = "Frame :";
         output += "\n\ttype : " + getType();
+        output += "\n\ttype value : " + type.getBinaryValue();
         output += "\n\tmetadata : " + metadata;
         output += "\n\tdata : " + ConversionManager.convertStreamToReadableStream(data);
         output += "\n\tcheckSum : " + ConversionManager.convertStreamToReadableStream(checkSum);
@@ -147,11 +153,15 @@ public class FrameModel {
     // Getters
 
     public Type getType() { return type.getType(); }
-    public byte getMetadata() {
+    public TypeModel getTypeModel() { return type; }
+    public String getMetadata() {
         return metadata;
     }
     public String getData() { return data; }
     public String getCheckSum() {
         return checkSum;
+    }
+    public String getFrameContent() {
+        return type.getBinaryValue() + metadata + data + checkSum;
     }
 }

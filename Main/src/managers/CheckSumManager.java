@@ -21,10 +21,10 @@ public class CheckSumManager {
      * @param data Data of the Frame.
      * @return Stream of bits representing the check sum
      */
-     public static String computeCheckSum(byte type, byte metadata, String data) {
+     public static String computeCheckSum(String type, String metadata, String data) {
          StringBuilder sb = new StringBuilder();
-         sb.append(ConversionManager.convertByteToString(type));
-         sb.append(ConversionManager.convertByteToString(metadata));
+         sb.append(type);
+         sb.append(metadata);
          sb.append(data);
          sb.append(padding);
         return computeReminder(sb.toString());
@@ -34,7 +34,7 @@ public class CheckSumManager {
      * Checks if the Frame's content is valid.
      * @param frameContent Stream of bits representing the Frame's content.
      */
-    public static boolean isFramContentValid(String frameContent) {
+    public static boolean isFrameContentValid(String frameContent) {
         return computeReminder(frameContent).equals(padding);
     }
 

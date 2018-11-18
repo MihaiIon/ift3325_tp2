@@ -1,5 +1,7 @@
 package models;
 
+import managers.ConversionManager;
+
 public class InformationFrameModel extends FrameModel {
 
     /**
@@ -8,7 +10,7 @@ public class InformationFrameModel extends FrameModel {
      * @param data Frame's data.
      */
     public InformationFrameModel(int id, String data) {
-        super(TypeModel.Type.INFORMATION, (byte)(id%8), data);
+        super(TypeModel.Type.INFORMATION, ConversionManager.convertByteToString((byte)(id%8)), data);
     }
 
     /**
@@ -18,11 +20,11 @@ public class InformationFrameModel extends FrameModel {
      * @param checksum Frame's checkSum.
      */
     public InformationFrameModel(byte id, String data, String checksum) {
-        super(TypeModel.Type.INFORMATION, id, data, checksum);
+        super(TypeModel.Type.INFORMATION, ConversionManager.convertByteToString(id), data, checksum);
     }
 
     // ----------------------------------------------------------------
     // Getters
 
-    public byte getId() { return getMetadata(); }
+    public int getId() { return (int) ConversionManager.convertStringToByte(getMetadata()); }
 }
