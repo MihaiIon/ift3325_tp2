@@ -28,10 +28,9 @@ public class FrameModel {
             String end = stream.substring(length - fLength);
             // Starts and ends with a Flag.
             if(flag.equals(start) && flag.equals(end)){
-                String frameContent = stream.substring(fLength, length - fLength);
+                String frameContent = DataManager.removedBitsStuffing(stream.substring(fLength, length - fLength));
                 return CheckSumManager.isFrameContentValid(frameContent);
             }
-            return false;
         }
         return false;
     }
@@ -154,13 +153,9 @@ public class FrameModel {
 
     public Type getType() { return type.getType(); }
     public TypeModel getTypeModel() { return type; }
-    public ByteModel getMetadata() {
-        return metadata;
-    }
+    public ByteModel getMetadata() { return metadata; }
     public String getData() { return data; }
-    public String getCheckSum() {
-        return checkSum;
-    }
+    public String getCheckSum() { return checkSum; }
     public String getFrameContent() {
         return type.toBinary() + metadata.toBinary() + data + checkSum;
     }
