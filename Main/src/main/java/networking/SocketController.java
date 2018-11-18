@@ -1,9 +1,8 @@
 package networking;
 
-import com.sun.xml.internal.ws.api.message.Packet;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import models.PacketModel;
+import models.FrameModel;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -13,18 +12,23 @@ import java.util.ArrayList;
 
 public abstract class SocketController {
 
-    SocketMonitorThread socketMonitor;
+    private SocketMonitorThread socketMonitor;
     private DataOutputStream out;
 
     private Disposable packetsSuscription;
     private Disposable timeOutsSuscription;
+
+    private int currentPosition;
+
+    private int goBackN;
+
     public abstract boolean isBusy();
 
-    public abstract void packetsReceived(ArrayList<PacketModel> packetsReceived);
+    public abstract void packetsReceived(ArrayList<FrameModel> packetsReceived);
 
     public abstract void timeOutReached(int position);
 
-    public void configureSocket(Socket socket) throws IOException {
+    void configureSocket(Socket socket) throws IOException {
         out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
         socketMonitor = new SocketMonitorThread(socket, this);
@@ -36,10 +40,8 @@ public abstract class SocketController {
                 .observeOn(Schedulers.trampoline())
                 .subscribe(this::timeOutReached);
 
-        socketMonitor.run();
+        socketMonitor.start();
     }
-
-
 
     public void close() {
         if(out != null) {
@@ -61,14 +63,41 @@ public abstract class SocketController {
         }
     }
 
-    public void sendPacket(PacketModel p) {
-        //   out.write(p.toBinary().getBytes());
+    void sendData(FrameModel frame) {
+        try {
+            out.writeUTF(frame.toBinary());
+        } catch (Exception e) {
+            System.out.println("Error sending data :");
+            e.printStackTrace();
+            System.exit(-1);
+        }
     }
 
-    public void sendData(String data) throws IOException {
-        //PacketModel packet = new PacketModel((byte)'a', PacketModel.Type.INFORMATION, new PayloadModel(data)); //TODO byte[1] remplacer par num de trame
-        //unconfirmedPackets.add(packet);
-        //out.write(packet.toBinary().getBytes());
-        out.writeUTF(data);
+    public int getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setCurrentPosition(int currentPosition) {
+        this.currentPosition = currentPosition;
+    }
+
+    public void incrementCurrentPosition() {
+        currentPosition ++;
+    }
+
+    public int getGoBackN() {
+        return goBackN;
+    }
+
+    public void setGoBackN(int goBackN) {
+        this.goBackN = goBackN;
+    }
+
+    int nextPos(int pos) {
+        return pos > getGoBackN() ? 0 : pos + 1;
+    }
+
+    protected int prevPos(int pos) {
+        return pos == 0 ? getGoBackN() : pos - 1;
     }
 }

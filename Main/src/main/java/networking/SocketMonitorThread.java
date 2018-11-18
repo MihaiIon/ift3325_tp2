@@ -1,14 +1,18 @@
 package networking;
 
+import factories.FrameFactory;
 import io.reactivex.Observable;
 import io.reactivex.subjects.PublishSubject;
-import models.PacketModel;
+import managers.DataManager;
+import models.FrameModel;
+import models.FrameWindowModel;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,14 +23,17 @@ public class SocketMonitorThread extends Thread {
 
     private DataInputStream in;
 
-    private PublishSubject<ArrayList<PacketModel>> packetsPublisher;
+    private PublishSubject<ArrayList<FrameModel>> packetsPublisher;
     private PublishSubject<Integer> timeOutPublisher;
 
     private SocketController socketController;
 
     private AtomicInteger packetsReceived = new AtomicInteger(0);
 
-    public SocketMonitorThread(Socket socket, SocketController socketController) throws IOException {
+    /*
+     * Construit un moniteur de socket qui surveille les frames recues
+     */
+    SocketMonitorThread(Socket socket, SocketController socketController) throws IOException {
         in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
         packetsPublisher = PublishSubject.create();
         timeOutPublisher = PublishSubject.create();
@@ -39,15 +46,13 @@ public class SocketMonitorThread extends Thread {
     public void run() {
         try {
             String input;
-            ArrayList<PacketModel> cumulatedPackets = new ArrayList<>();
-            while ((input = in.readUTF()) != null) {
+            ArrayList<FrameModel> cumulatedFrames = new ArrayList<>();
+            while ((input = in.readUTF()) != null) { //TODO ajouter condition?
                 System.out.println(input);
                 if(socketController.isBusy()) {
-                    //cumulatedPackets.add(new PacketModel())
-                    // TODO
-                    //
+                    cumulatedFrames.addAll(Arrays.asList(DataManager.splitMessageIntoFrames(input)));
                 } else {
-                    packetsPublisher.onNext(cumulatedPackets);
+                    packetsPublisher.onNext(cumulatedFrames);
                 }
                 new TimeOutMonitor(packetsReceived.incrementAndGet()).run();
             }
@@ -79,11 +84,17 @@ public class SocketMonitorThread extends Thread {
         }
     }
 
-    public Observable<ArrayList<PacketModel>> getReceivedPacketsObservable() {
+    /*
+     * Retourne le observable de packets recues
+     */
+    Observable<ArrayList<FrameModel>> getReceivedPacketsObservable() {
         return packetsPublisher;
     }
 
-    public Observable<Integer> getTimeOutObservable() {
+    /*
+     * Retourne le observable de timeout
+     */
+    Observable<Integer> getTimeOutObservable() {
         return timeOutPublisher;
     }
 }
