@@ -1,8 +1,10 @@
 package managers;
 
+import factories.FrameFactory;
+import models.FrameModel;
+import models.FrameWindowModel;
 
-import models.PacketModel;
-import models.PayloadModel;
+import java.util.ArrayList;
 
 public class DataManager {
 
@@ -10,71 +12,76 @@ public class DataManager {
     public static byte FLAG = (byte) 126;
 
     // Sets the size (in bytes) of each payloads.
-    public static int PAYLOAD_SIZE = 4;
+    private static int CHARACTER_SIZE = 8;
+    private static int PAYLOAD_MAX_LENGTH = CHARACTER_SIZE * 32;
 
     /**
-     * Splits the data in smaller payloads. Each packet contains one (1) payload.
-     * @param data The data to be sent to the receiver.
+     * Splits the provided <message> into Information Frames.
+     * @param message The message to be sent to the receiver.
      */
-    public static PayloadModel[] splitDataToPayloads(String data) {
-        // Transform data into a stream of bits
-        String stream = ConversionManager.convertDataToBitsStream(data);
-        stream = encodeBitsStuffing(stream);
-        // Add zeros at the end of the stream until we have a multiple of 32 (bits).
-        String paddedStream = stream;
-        int payloadSize = PAYLOAD_SIZE * 8;
-        int remainder = stream.length() % payloadSize;
-        if(remainder != 0) {
-            int expectedLength = payloadSize * ((int) Math.ceil((double) stream.length() / payloadSize));
-            String format = "%1$-"+ expectedLength +"s";
-            paddedStream = String.format(format, stream).replace(' ', '0');
+    public static FrameModel[] splitMessageIntoFrames(String message) {
+        String[] payloads = splitMessageIntoPayloads(message);
+        FrameModel[] frames = new FrameModel[payloads.length];
+        for (int i = 0; i < frames.length; i++) {
+            frames[i] = FrameFactory.createInformationFrame(i, payloads[i]);
         }
+        return frames;
+    }
+
+    /**
+     * Splits the data in smaller payloads. Each Frame contains one (1) payload.
+     * @param message The message to be sent to the receiver.
+     */
+    private static String[] splitMessageIntoPayloads(String message) {
+        // Transform data into a stream of bits
+        String stream = ConversionManager.convertMessageToStream(message);
         // Create payloads
-        int length = (int) Math.floor((double) paddedStream.length() / payloadSize);
-        PayloadModel[] payloads = new PayloadModel[length];
-        for (int i = 0; i < length; i++) {
-            payloads[i] = new PayloadModel(paddedStream.substring(i * payloadSize, (i+1) * payloadSize));
+        String data;
+        int length = (int) Math.ceil((double) stream.length() / PAYLOAD_MAX_LENGTH);
+        String[] payloads = new String[length];
+        for (int i = 0, start, end, remaining; i < length; i++) {
+            start = i * PAYLOAD_MAX_LENGTH;
+            remaining = stream.length() - start;
+            end = remaining < PAYLOAD_MAX_LENGTH ? stream.length() : (i+1) * PAYLOAD_MAX_LENGTH;
+            data = stream.substring(start, end);
+            payloads[i] = data;
         }
         return payloads;
     }
 
     /**
-     * Provides the original data.
-     * @param packets The received packets.
-     * @return
+     *
+     * @param windows
      */
-    public static String extractDataFromPackets(PacketModel[] packets) {
-        String stream = getDataStream(packets);
-        return ConversionManager.convertBitsStreamToData(stream);
-    }
-
-    /**
-     * Provides the original stream (without bits stuffing).
-     * @param packets The received packets.
-     */
-    private static String getDataStream(PacketModel[] packets) {
-        String stream = "";
-        for (int i = 0; i < packets.length; i++) {
-            stream += packets[i].getPayload().toString();
+    public static String extractMessageFromFrames(ArrayList<FrameWindowModel> windows) {
+        StringBuilder message = new StringBuilder();
+        for (FrameWindowModel window : windows) {
+            for (FrameModel frame : window.getFrames()) {
+                if (frame == null) break;
+                message.append(ConversionManager.convertStreamToMessage(frame.getData()));
+            }
         }
-        return decodeBitsStuffing(stream);
+        return message.toString();
+    }
+
+    // --------------------------------------------------------------------
+
+    // Bits stuffing sequence.
+    private static String stuffingSequence = "11111";
+
+    /**
+     * Adds a '0' after each occurrence of "11111".
+     * @param stream Stream of bits.
+     */
+    public static String addBitsStuffing(String stream) {
+        return stream.replace(stuffingSequence, stuffingSequence + "0");
     }
 
     /**
-     *
-     * @param stream
+     * Reverts the bits stuffing (see `encodeBitsStuffing`).
+     * @param stream Stream of bits.
      */
-    private static String encodeBitsStuffing(String stream) {
-        String sequence = ConversionManager.convertByteToString(FLAG);
-        return stream.replace(sequence, sequence + sequence);
-    }
-
-    /**
-     *
-     * @param stream
-     */
-    private static String decodeBitsStuffing(String stream) {
-        String sequence = ConversionManager.convertByteToString(FLAG);
-        return stream.replace(sequence + sequence, sequence);
+    public static String removedBitsStuffing(String stream) {
+        return stream.replace(stuffingSequence + "0", stuffingSequence);
     }
 }

@@ -17,8 +17,7 @@ import java.util.Arrays;
 public class Main {
 
     public static void main(String args[]) throws IOException {
-
-
+        
         System.setProperty( "sun.security.ssl.allowUnsafeRenegotiation", "true" );
         //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un receveur
         if(args.length == 2 && args[0].toUpperCase().equals("RECEIVER") && StringUtils.isNumeric(args[1])) {
@@ -41,7 +40,8 @@ public class Main {
 
         } else {
             System.out.print("Arguments du programme invalides : " + Arrays.toString(args));
-            TestManager.testData("mihai");
+            TestManager.testChecksum();
+            TestManager.testMessageTransmission("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco");
         }
     }
 }
