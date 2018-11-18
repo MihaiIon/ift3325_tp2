@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class Receiver implements SocketMonitorThread.PacketReceptionListener {
+public class Receiver implements SocketMonitorThread.FrameReceptionListener {
 
     ServerSocket server;
     SocketMonitorThread socketMonitor;

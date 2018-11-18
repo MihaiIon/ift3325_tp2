@@ -14,12 +14,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SocketMonitorThread extends Thread {
 
-    private PacketReceptionListener receptionListener;
+    private FrameReceptionListener receptionListener;
     private DataInputStream in;
 
     private AtomicInteger framesReceived = new AtomicInteger(0);
 
-    public SocketMonitorThread(Socket socket, PacketReceptionListener receptionListener) throws IOException {
+    public SocketMonitorThread(Socket socket, FrameReceptionListener receptionListener) throws IOException {
         in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
         this.receptionListener = receptionListener;
     }
@@ -67,7 +67,7 @@ public class SocketMonitorThread extends Thread {
     }
 
 
-    public interface PacketReceptionListener {
+    public interface FrameReceptionListener {
         void onFrameReceived(FrameModel packet);
 
         void onFrameReceptionTimeOut();

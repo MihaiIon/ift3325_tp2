@@ -2,7 +2,6 @@ package managers;
 
 import factories.FrameFactory;
 import models.FrameModel;
-import models.InformationFrameModel;
 
 public class TestManager {
 

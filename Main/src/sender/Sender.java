@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class Sender implements SocketMonitorThread.PacketReceptionListener {
+public class Sender implements SocketMonitorThread.FrameReceptionListener {
 
     private AtomicInteger backN = new AtomicInteger();
     private AtomicInteger position = new AtomicInteger();
