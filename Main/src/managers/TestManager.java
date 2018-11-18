@@ -1,35 +1,57 @@
 package managers;
 
-import factories.FrameFactory;
 import models.FrameModel;
+import models.FrameWindowModel;
+
+import java.util.ArrayList;
 
 public class TestManager {
 
     public static void testMessageTransmission(String message) {
         System.out.println("\n==================================================================");
-        System.out.println("\tTesting Data : " + message);
+        System.out.println("\tTesting Transmission");
         System.out.println("==================================================================");
 
-        // Build payloads
-        String[] payloads = DataManager.splitMessageIntoPayloads(message);
+        // Message
+        System.out.println("\n***** Encoding message ****");
+        System.out.println("== Message sent : " + message + " ==");
+        FrameModel[] framesSent = DataManager.splitMessageIntoFrames(message);
 
-        // Create Frames
-        System.out.println("== Sending Frames ==");
-        FrameModel[] framesSent = new FrameModel[payloads.length];
-        for (int i = 0; i < framesSent.length; i++) {
-            framesSent[i] = FrameFactory.createInformationFrame(i, payloads[i]);
+        // Sending
+        System.out.println("\n***** Sending Frames ****");
+        for (FrameModel frame : framesSent) {
             System.out.println("== Frame Created ==");
-            System.out.println(framesSent[i]);
+            System.out.println(frame);
         }
 
-        // Create Stream
-        System.out.println("\n== Receiving Frames ==");
-        FrameModel[] framesReceived = new FrameModel[framesSent.length];
-        for (int i = 0; i < framesReceived.length; i++) {
-            framesReceived[i] = FrameModel.convertStreamToFrame(framesSent[i].toBinary());
+        // Receiving
+        System.out.println("\n***** Receiving Frames  ****");
+        ArrayList<FrameWindowModel> windows = new ArrayList<>();
+        FrameWindowModel window = new FrameWindowModel();
+        FrameModel receivedFrame;
+        for (FrameModel frame : framesSent) {
+            // Adjust window
+            if (window.isFull()) {
+                windows.add(window);
+                window = new FrameWindowModel();
+            }
+            // Parse binary data
             System.out.println("== Frame Created ==");
-            System.out.println(framesReceived[i]);
+            receivedFrame = FrameModel.convertStreamToFrame(frame.toBinary());
+            if (receivedFrame != null && !receivedFrame.hasErrors()) {
+                window.addFrame(receivedFrame);
+                System.out.println(receivedFrame);
+            } else {
+                System.out.println("Something went wrong");
+                System.exit(0);
+            }
         }
+        windows.add(window);
+
+        // Extracting
+        System.out.println("\n***** Extracting message ****");
+        String receivedMessage = DataManager.extractMessageFromFrames(windows);
+        System.out.println("== Message received : " + receivedMessage + " ==");
     }
 
     public static void testChecksum() {

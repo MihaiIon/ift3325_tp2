@@ -5,12 +5,21 @@ import java.nio.charset.StandardCharsets;
 public class ConversionManager {
 
     /**
-     * @param data The data that will be sent to the receiver.
+     * @param message The message that will be sent to the receiver.
      * @return Stream of bits.
      */
-    public static String convertDataToBitsStream(String data) {
-        byte[] bytes = data.getBytes(StandardCharsets.US_ASCII);
+    public static String convertMessageToStream(String message) {
+        byte[] bytes = message.getBytes(StandardCharsets.US_ASCII);
         return convertBytesToString(bytes);
+    }
+
+    /**
+     * @param stream Stream of bits representing the message.
+     * @return Message.
+     */
+    public static String convertStreamToMessage(String stream) {
+        byte[] bytes = convertStringToBytes(stream);
+        return new String(bytes, StandardCharsets.US_ASCII);
     }
 
     /**
@@ -26,11 +35,11 @@ public class ConversionManager {
      * @return Provides a String of bits representing each byte.
      */
     public static String convertBytesToString(byte[] bs) {
-        String str = "";
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < bs.length; i++){
-            str += convertByteToString(bs[i]);
+            sb.append(convertByteToString(bs[i]));
         }
-        return str;
+        return sb.toString();
     }
 
     /**
@@ -46,7 +55,7 @@ public class ConversionManager {
      * @param stream Stream of bits (multiple of 8).
      * @return Provides an array of bytes representing the stream of bits.
      */
-    public static byte[] convertStringToBtyes(String stream) {
+    public static byte[] convertStringToBytes(String stream) {
         if(stream.length() % 8 == 0) {
             int length = stream.length() / 8;
             byte[] bytes = new byte[length];

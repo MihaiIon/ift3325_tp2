@@ -64,7 +64,7 @@ public class Sender implements SocketMonitorThread.FrameReceptionListener {
     public void onFrameReceived(FrameModel packet) {
         switch (packet.getType()) {
             case FRAME_RECEPTION: {
-                confirmPackets(position.get(), packet.getMetadata());
+                confirmPackets(position.get(), 0/*packet.getMetadata()*/);
                 for (FrameModel p: unconfirmedPackets) {
 //                    try {
 //                        sendPacket(p);
@@ -97,7 +97,7 @@ public class Sender implements SocketMonitorThread.FrameReceptionListener {
     private void confirmPackets(int from, int to) {
         int confirmPosition = from;
         while (confirmPosition != to) {
-            unconfirmedPackets = (ArrayList<FrameModel>) unconfirmedPackets.stream().filter(x -> x.getMetadata() != position.get()).collect(Collectors.toList());
+            unconfirmedPackets = (ArrayList<FrameModel>) unconfirmedPackets.stream().filter(x -> /*x.getMetadata()*/0 != position.get()).collect(Collectors.toList());
             confirmPosition = nextPos(position.get());
         }
     }

@@ -1,5 +1,7 @@
 package models;
 
+import managers.ConversionManager;
+
 import static models.TypeModel.Type.CONNECTION_REQUEST;
 import static models.TypeModel.Type.TERMINATE_CONNECTION_REQUEST;
 
@@ -15,15 +17,26 @@ public class RequestFrameModel extends FrameModel {
      * Default constructor.
      */
     public RequestFrameModel(RequestType requestType) {
-        super(requestType == OPEN_CONNEXION ? CONNECTION_REQUEST : TERMINATE_CONNECTION_REQUEST, (byte) 0);
+        super(
+            requestType == OPEN_CONNEXION
+                ? CONNECTION_REQUEST
+                : TERMINATE_CONNECTION_REQUEST,
+            "00000000"
+        );
     }
 
     /**
      * Default constructor (+ checksum).
-     *
      * @param checksum Frame's checkSum.
      */
     public RequestFrameModel(RequestType requestType, String checksum) {
-        super(requestType == OPEN_CONNEXION ? CONNECTION_REQUEST : TERMINATE_CONNECTION_REQUEST, (byte) 0, "", checksum);
+        super(
+            requestType == OPEN_CONNEXION
+                ? CONNECTION_REQUEST
+                : TERMINATE_CONNECTION_REQUEST,
+            "00000000",
+            "",
+            checksum
+        );
     }
 }

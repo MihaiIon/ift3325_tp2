@@ -59,4 +59,5 @@ public class TypeModel {
     public Type getType() { return type; }
     public byte getValue() { return value; }
     public char getCharacter() { return character; }
+    public String getBinaryValue() { return ConversionManager.convertByteToString(value); }
 }
