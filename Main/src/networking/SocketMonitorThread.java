@@ -17,7 +17,7 @@ public class SocketMonitorThread extends Thread {
     private PacketReceptionListener receptionListener;
     private DataInputStream in;
 
-    private AtomicInteger packetsReceived = new AtomicInteger(0);
+    private AtomicInteger framesReceived = new AtomicInteger(0);
 
     public SocketMonitorThread(Socket socket, PacketReceptionListener receptionListener) throws IOException {
         in = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -35,7 +35,7 @@ public class SocketMonitorThread extends Thread {
                 if(receptionListener != null) {
                     // TODO receptionListener.onPacketReceived();
                 }
-                new TimeOutMonitor(packetsReceived.incrementAndGet()).run();
+                new TimeOutMonitor(framesReceived.incrementAndGet()).run();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,8 +57,8 @@ public class SocketMonitorThread extends Thread {
         public void run() {
             try {
                 Thread.sleep(3000);
-                if(packetsReceived.get() <= packetNumber) {
-                    receptionListener.onPacketReceptionTimeOut();
+                if(framesReceived.get() <= packetNumber) {
+                    receptionListener.onFrameReceptionTimeOut();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -68,8 +68,8 @@ public class SocketMonitorThread extends Thread {
 
 
     public interface PacketReceptionListener {
-        void onPacketReceived(FrameModel packet);
+        void onFrameReceived(FrameModel packet);
 
-        void onPacketReceptionTimeOut();
+        void onFrameReceptionTimeOut();
     }
 }

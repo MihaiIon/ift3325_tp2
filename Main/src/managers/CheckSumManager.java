@@ -7,21 +7,35 @@ public class CheckSumManager {
     private static String padding = new String(new char[generator.length()]).replace("\0", "0");
 
     /**
-     * Adds padding to the stream of bits and provides its remainder.
      * @param stream Stream of bits representing the payload.
-     * @return Stream of bits representing the check sum
+     * @return Stream of bits representing the checksum.
      */
-     static String computeCheckSum(String stream) {
-        String paddedStream = stream + padding;
-        return computeReminder(paddedStream);
+    public static String computeCheckSum(String stream) {
+        return computeReminder(stream + padding);
     }
 
     /**
-     * Checks if the payload of the Frame is valid.
-     * @param stream Stream of bits representing the payload + computed_checksum.
+     * Computes the checksum for the <type>, <metadata> and <data>.
+     * @param type Type of the Frame.
+     * @param metadata Metadata of the Frame.
+     * @param data Data of the Frame.
+     * @return Stream of bits representing the check sum
      */
-    public static boolean isCheckSumValid(String stream) {
-        return computeReminder(stream).equals(padding);
+     public static String computeCheckSum(byte type, byte metadata, String data) {
+         StringBuilder sb = new StringBuilder();
+         sb.append(ConversionManager.convertByteToString(type));
+         sb.append(ConversionManager.convertByteToString(metadata));
+         sb.append(data);
+         sb.append(padding);
+        return computeReminder(sb.toString());
+    }
+
+    /**
+     * Checks if the Frame's content is valid.
+     * @param frameContent Stream of bits representing the Frame's content.
+     */
+    public static boolean isFramContentValid(String frameContent) {
+        return computeReminder(frameContent).equals(padding);
     }
 
     /**

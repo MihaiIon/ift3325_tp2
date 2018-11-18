@@ -1,26 +1,13 @@
 package models;
 
+import factories.TypeFactory;
 import managers.CheckSumManager;
 import managers.ConversionManager;
 import managers.DataManager;
 
-import static models.FrameModel.Type.INFORMATION;
+import static models.TypeModel.Type;
 
 public class FrameModel {
-
-    // ------------------------------------------------------------------------
-    // Static
-
-    /**
-     * Used in the constructor to specifiy the type (role)
-     * of the packet that is sent.
-     */
-    public enum Type {
-        INFORMATION,
-        CONNECTION_REQUEST, FRAME_RECEPTION, REJECTED_FRAME,
-        ENDING_CONNECTION,
-        P_BITS
-    }
 
     /**
      * Checks if the frame is damaged.
@@ -28,7 +15,23 @@ public class FrameModel {
      * @return Returns TRUE is the Frame is valid.
      */
     public static boolean isFrameValid(String stream) {
-        return true;
+        // Must be at least 32 bits of length.
+        String flag = ConversionManager.convertByteToString(DataManager.FLAG);
+        int length = stream.length();
+        int fLength = flag.length();
+        int gLength = CheckSumManager.generator.length();
+        int minLength = (2 * fLength) + 16 + gLength;
+        if (length >= minLength) {
+            String start = stream.substring(0, fLength);
+            String end = stream.substring(length - fLength);
+            // Starts and ends with a Flag.
+            if(flag.equals(start) && flag.equals(end)){
+                String frameContent = stream.substring(fLength, length - fLength);
+                return CheckSumManager.isFramContentValid(frameContent);
+            }
+            return false;
+        }
+        return false;
     }
 
     /**
@@ -36,164 +39,117 @@ public class FrameModel {
      * @param stream Stream of bits representing the Frame.
      * @return FrameModel Object.
      */
-    public static FrameModel convertToFrame(String stream) {
+    public static FrameModel convertStreamToFrame(String stream) {
         // Save lengths
-        int streamLength = stream.length();
-        int generatorLength = CheckSumManager.generator.length();
-        // Parse type
-        Type type = parseType(stream.substring(0, 8));
+        int length = stream.length();
+        int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
+        int gLength = CheckSumManager.generator.length();
+        // Parse info
+        Type type = TypeModel.parseType(stream.substring(fLength, fLength + 8));
+        byte metadata = ConversionManager.convertStringToByte(stream.substring(fLength + 8, fLength + 16));
+        String checkSum = stream.substring(length - gLength - fLength, length - fLength);
         // Parse Frame
         switch (type) {
             case INFORMATION:
-                byte id = ConversionManager.convertStringToByte(stream.substring(8, 16));
-                String data = stream.substring(16, streamLength - generatorLength);
-                String checkSum = stream.substring(streamLength - generatorLength);
-                return new FrameModel(id, type, new PayloadModel(data, checkSum));
+                String data = stream.substring(fLength + 16, length - gLength - fLength);
+                return new InformationFrameModel(metadata, data, checkSum);
             case CONNECTION_REQUEST:
-                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+                return new ConnexionRequestFrame(metadata, checkSum);
             case FRAME_RECEPTION:
-                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
             case REJECTED_FRAME:
-                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
             case ENDING_CONNECTION:
-                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+//                return new FrameModel((byte)0, type, new PayloadModel("", ""));
             default:
-                return new FrameModel((byte)0, type, new PayloadModel("", ""));
+                return null;
         }
-    }
-
-    /**
-     * @param type The type of the Frame.
-     * @return Encodes the type of the Frame on 8 bits (byte).
-     */
-    private static byte convertTypeToByte(Type type) {
-        switch (type) {
-            case INFORMATION:
-                return (byte) 'I';
-            case CONNECTION_REQUEST:
-                return (byte) 'C';
-            case FRAME_RECEPTION:
-                return (byte) 'A';
-            case REJECTED_FRAME:
-                return (byte) 'R';
-            case ENDING_CONNECTION:
-                return (byte) 'F';
-            default:
-                return (byte) 'P';
-        }
-    }
-
-    /**
-     *
-     * @param byteStream
-     * @return
-     */
-    private static Type parseType (String byteStream) {
-        return Type.INFORMATION;
     }
 
     // ------------------------------------------------------------------------
-    // Packet Model
+    // Frame Model
 
     // Attributes
-    private byte id;
-    private byte type;
-    private PayloadModel payload;
+    private byte metadata;
+    private TypeModel type;
+    private String data;
+    private String checkSum;
 
     /**
-     * Information Frame constructor.
-     * @param id Identifies the Frame (0-7).
-     * @param type Identifies the type of the Frame (see class Type).
-     * @param payload Frame's data.
+     * Default constructor.
+     * @param type Frame's metadata.
+     * @param metadata Frame's metadata.
+     * @param data Frame's data.
      */
-    public FrameModel(byte id, Type type, PayloadModel payload) {
-        this.id = id;
-        this.type = FrameModel.convertTypeToByte(type);
-        this.payload = payload;
+    public FrameModel(Type type, byte metadata, String data) {
+        this.type = TypeFactory.createTypeModel(type);
+        this.metadata = metadata;
+        this.data = data;
+        this.checkSum = CheckSumManager.computeCheckSum(this.type.getValue(), metadata, data);
     }
+
+    /**
+     * Default constructor (+ computed checksum).
+     * @param type Frame's metadata.
+     * @param metadata Frame's metadata.
+     * @param data Frame's data.
+     */
+    public FrameModel(Type type, byte metadata, String data, String checkSum) {
+        this.type = TypeFactory.createTypeModel(type);
+        this.metadata = metadata;
+        this.data = data;
+        this.checkSum = checkSum;
+    }
+
+    /**
+     * No data constructor.
+     * @param type Frame's metadata.
+     * @param metadata Frame's metadata.
+     */
+    public FrameModel(Type type, byte metadata) {
+        this.type = TypeFactory.createTypeModel(type);
+        this.metadata = metadata;
+        this.data = "";
+        this.checkSum = CheckSumManager.computeCheckSum(this.type.getValue(), metadata, data);
+    }
+
+    // ------------------------------------------------------------------------
+    // Methods
 
     /**
      * Converts FrameModel object to binary number (String representation).
      */
     public String toBinary() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(ConversionManager.convertByteToString(DataManager.FLAG));
-        sb.append(ConversionManager.convertByteToString(type));
-        switch (getType()) {
-            case INFORMATION:
-                sb.append(ConversionManager.convertByteToString(id));
-                sb.append(payload.toString());
-                break;
-            case FRAME_RECEPTION:
-                break;
-            case REJECTED_FRAME:
-                break;
-            case ENDING_CONNECTION:
-                break;
-            default:
-
-        }
-        sb.append(ConversionManager.convertByteToString(DataManager.FLAG));
-        return sb.toString();
-    }
-
-    // ------------------------------------------------------------------------
-    // Getters
-
-    /**
-     * @return Provides the identifier of the Frame.
-     */
-    public int getId() {
-        return this.id;
-    }
-
-    /**
-     * @return Provides the type of the Frame.
-     */
-    public Type getType() {
-        char type = (char) (this.type & 0xFF);
-        switch (type) {
-            case 'I':
-                return INFORMATION;
-            case 'C':
-                return Type.CONNECTION_REQUEST;
-            case 'A':
-                return Type.FRAME_RECEPTION;
-            case 'R':
-                return Type.REJECTED_FRAME;
-            case 'F':
-                return Type.ENDING_CONNECTION;
-            default:
-                return Type.P_BITS;
-        }
-    }
-
-    public PayloadModel getPayload() { return payload; }
-    public String getData() { return payload.getData(); }
-    public String getCheckSum() {
-        return payload.getCheckSum();
+        String flag = ConversionManager.convertByteToString(DataManager.FLAG);
+        String frameContent = ConversionManager.convertByteToString(type.getValue());
+        frameContent += ConversionManager.convertByteToString(metadata);
+        frameContent += data + checkSum;
+        frameContent = DataManager.addBitsStuffing(frameContent);
+        return flag + frameContent + flag;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Frame : ");
-        sb.append("\n\ttype : ").append(getType());
-        switch (getType()) {
-            case INFORMATION:
-                sb.append("\n\tid : ").append(getId());
-                sb.append("\n\tdata : ").append(ConversionManager.convertStreamToReadableStream(getData()));
-                sb.append("\n\tcheckSum : ").append(ConversionManager.convertStreamToReadableStream(getCheckSum()));
-                break;
-            case FRAME_RECEPTION:
-                break;
-            case REJECTED_FRAME:
-                break;
-            case ENDING_CONNECTION:
-                break;
-            default:
-        }
-        sb.append("\n\tbinary : " + toBinary());
-        return sb.toString();
+        String output = "Frame :";
+        output += "\n\ttype : " + getType();
+        output += "\n\tmetadata : " + metadata;
+        output += "\n\tdata : " + ConversionManager.convertStreamToReadableStream(data);
+        output += "\n\tcheckSum : " + ConversionManager.convertStreamToReadableStream(checkSum);
+        output += "\n\tbinary : " + toBinary();
+        output += "\n\tisValid : " + isFrameValid(toBinary());
+        return output;
+    }
+
+    // ------------------------------------------------------------------------
+    // Getters
+
+    public Type getType() { return type.getType(); }
+    public byte getMetadata() {
+        return metadata;
+    }
+    public String getData() { return data; }
+    public String getCheckSum() {
+        return checkSum;
     }
 }

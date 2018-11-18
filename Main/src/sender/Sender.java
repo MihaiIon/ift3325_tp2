@@ -56,15 +56,15 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     }
 
     @Override
-    public void onPacketReceptionTimeOut() {
+    public void onFrameReceptionTimeOut() {
 
     }
 
     @Override
-    public void onPacketReceived(FrameModel packet) {
+    public void onFrameReceived(FrameModel packet) {
         switch (packet.getType()) {
             case FRAME_RECEPTION: {
-                confirmPackets(position.get(), packet.getId());
+                confirmPackets(position.get(), packet.getMetadata());
                 for (FrameModel p: unconfirmedPackets) {
 //                    try {
 //                        sendPacket(p);
@@ -89,7 +89,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
         out.writeUTF(data);
     }
 
-    private void sendPacket(FrameModel p) throws IOException {
+    private void sendFrame(FrameModel p) throws IOException {
         unconfirmedPackets.add(p);
      //   out.write(p.toBinary().getBytes());
     }
@@ -97,7 +97,7 @@ public class Sender implements SocketMonitorThread.PacketReceptionListener {
     private void confirmPackets(int from, int to) {
         int confirmPosition = from;
         while (confirmPosition != to) {
-            unconfirmedPackets = (ArrayList<FrameModel>) unconfirmedPackets.stream().filter(x -> x.getId() != position.get()).collect(Collectors.toList());
+            unconfirmedPackets = (ArrayList<FrameModel>) unconfirmedPackets.stream().filter(x -> x.getMetadata() != position.get()).collect(Collectors.toList());
             confirmPosition = nextPos(position.get());
         }
     }

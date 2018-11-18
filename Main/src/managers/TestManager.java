@@ -1,7 +1,7 @@
 package managers;
 
 import models.FrameModel;
-import models.PayloadModel;
+import models.InformationFrameModel;
 
 public class TestManager {
 
@@ -15,21 +15,20 @@ public class TestManager {
         System.out.println("==================================================================");
 
         // Build payloads
-        PayloadModel[] payloads = DataManager.splitMessageToPayloads(message);
+        String[] payloads = DataManager.splitMessageToPayloads(message);
 
         // Create Frames
         FrameModel[] packetsSent = new FrameModel[payloads.length];
         for (int i = 0; i < packetsSent.length; i++) {
-            byte id = (byte)(i%8);
-            packetsSent[i] = new FrameModel(id, FrameModel.Type.INFORMATION, payloads[i]);
-            System.out.println("== Packet Created ==");
+            packetsSent[i] = new InformationFrameModel(i, payloads[i]);
+            System.out.println("== Frame Created ==");
             System.out.println(packetsSent[i].toString());
         }
 
         // Create Stream
         FrameModel[] packetsReceived = new FrameModel[packetsSent.length];
         for (int i = 0; i < packetsReceived.length; i++) {
-            packetsReceived[i] = FrameModel.convertToFrame(packetsSent[i].toBinary());
+            packetsReceived[i] = FrameModel.convertStreamToFrame(packetsSent[i].toBinary());
 
         }
     }
