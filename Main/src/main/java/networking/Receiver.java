@@ -2,6 +2,8 @@ package networking;
 
 import factories.FrameFactory;
 import models.FrameModel;
+import models.FrameWindowModel;
+import models.InformationFrameModel;
 import models.TypeModel;
 
 import java.io.IOException;
@@ -16,7 +18,16 @@ public class Receiver extends SocketController {
 
     private AtomicBoolean isBusy = new AtomicBoolean(false);
 
-    private boolean isOpen = false;
+    private ArrayList<FrameWindowModel> frameWindowModels = new ArrayList<>();
+
+    private State state;
+
+    private enum State {
+        Waiting,
+        Open,
+        Closed
+    }
+
 
     public Receiver(int port) throws IOException {
         server = new ServerSocket(port);
@@ -32,44 +43,70 @@ public class Receiver extends SocketController {
 
     public void packetsReceived(ArrayList<FrameModel> packetModels) {
         isBusy.set(true);
-        packetModels.forEach(stream -> {
-            if(stream.getType() == TypeModel.Type.CONNECTION_REQUEST) {
-                if (isOpen) {
-                    System.out.println("Connection request but connection is already open.");
-                } else {
-                    isOpen = true;
-                }
-            } else {
-                switch (stream.getType()) {
-                    case TERMINATE_CONNECTION_REQUEST: {
-                        if(isOpen) {
-                            close();
-                        } else {
-                            System.out.println("Trying to close an non-open connection.");
-                        }
-                        break;
-                    }
-                    case INFORMATION: {
-                        FrameModel frameModel = FrameFactory.createReceptionFrame(getCurrentPosition());
-                        sendFrame(frameModel);
-                        break;
-                    }
-                    case REJECTED_FRAME: {
-                        //TODO
-                        break;
-                    }
-                    case FRAME_RECEPTION: {
-                        //TODO possible?
-                        break;
-                    }
-                    case P_BITS: {
-                        //TODO
+        packetModels.forEach(frame -> {
+            //TODO if checksum
 
+            switch (state) {
+                case Waiting: {
+                    if(frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
+                            state = State.Open;
+                            frameWindowModels.add(new FrameWindowModel(getGoBackN()));
+                    } else {
+                        logWrongRequestType("Connection request", frame.getType().toString());
                     }
+                    break;
+                }
+                case Open: {
+                    switch (frame.getType()) {
+                            case TERMINATE_CONNECTION_REQUEST: {
+                                    state = State.Closed;
+                                    close();
+                                break;
+                            }
+                            case INFORMATION: {
+                                InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
+                                if(getLatestFrameWindow().addFrame(informationFrameModel)) {
+                                    if(getLatestFrameWindow().isFull()) {
+                                        frameWindowModels.add(new FrameWindowModel(getGoBackN()));
+                                    }
+                                    FrameModel frameModel = FrameFactory.createReceptionFrame(informationFrameModel.getId());
+                                    sendFrame(frameModel);
+                                } else {
+                                    FrameModel frameModel = FrameFactory.createRejectionFrame(getLatestFrameWindow().getPosition());
+                                    sendFrame(frameModel);
+                                }
+                                break;
+                            }
+                            case REJECTED_FRAME: {
+                                //TODO possible?
+                                break;
+                            }
+                            case FRAME_RECEPTION: {
+                                //TODO possible?
+                                break;
+                            }
+                            case P_BITS: {
+                                //TODO possible?
+                            }
+                        }
+
+                    break;
+                }
+                case Closed: {
+                    logWrongRequestType("None, request status is closed", frame.getType().toString());
+                    break;
                 }
             }
         });
         isBusy.set(false);
+    }
+
+    private void logWrongRequestType(String expected, String found) {
+        System.out.println("-----------------------------");
+        System.out.println("Wrong frame type received : " + expected);
+        System.out.println("expected : ");
+        System.out.println("received : " + found);
+        System.out.println("-----------------------------");
     }
 
     @Override
@@ -83,6 +120,11 @@ public class Receiver extends SocketController {
     public boolean isBusy() {
         return isBusy.get();
     }
+
+    public FrameWindowModel getLatestFrameWindow() {
+        return frameWindowModels.get(frameWindowModels.size()-1);
+    }
+
 
     @Override
     public void close() {

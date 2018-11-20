@@ -18,13 +18,11 @@ public class Sender extends SocketController {
 
     private AtomicInteger position = new AtomicInteger();
 
-    private ArrayList<FrameModel> unconfirmedFrames = new ArrayList<FrameModel>();
+    private ArrayList<FrameModel> unconfirmedFrames = new ArrayList<>();
 
     private boolean busy;
 
     private int latestConfirmedPosition;
-
-    private BufferedReader reader;
 
     private FrameModel[] framesToSend;
 
@@ -54,7 +52,7 @@ public class Sender extends SocketController {
      *   https://www.journaldev.com/709/java-read-file-line-by-line
      *   Lit un fichier ligne par ligne et les envoie
      */
-    public void readFile(String filepath) {
+    private void readFile(String filepath) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filepath));
             String line = null;
@@ -83,7 +81,7 @@ public class Sender extends SocketController {
     /**
      *
      */
-    public void sendNextFrames() {
+    private void sendNextFrames() {
         //TODO check si frame non confirmées doivent etre envoyé
         unconfirmedFrames.forEach(this::sendFrame);
         try {
@@ -109,6 +107,7 @@ public class Sender extends SocketController {
             //unconfirmedFrames = (ArrayList<FrameModel>) unconfirmedFrames.stream().filter(x -> x.getData() != position.get()).collect(Collectors.toList());
             confirmPosition = nextPos(position.get());
         }
+        latestConfirmedPosition = to;
     }
 
     public boolean isBusy() {
@@ -123,7 +122,6 @@ public class Sender extends SocketController {
                 case FRAME_RECEPTION: {
                     ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
                     confirmPackets(latestConfirmedPosition, receptionFrameModel.getRecievedFrameId());
-                    latestConfirmedPosition = receptionFrameModel.getRecievedFrameId();
                     sendNextFrames();
                     break;
                 }
@@ -131,7 +129,6 @@ public class Sender extends SocketController {
                     RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
                     int confirmedPosition = prevPos(rejectionFrameModel.getRejectedFrameId());
                     confirmPackets(latestConfirmedPosition, confirmedPosition);
-                    latestConfirmedPosition = confirmedPosition;
                     sendNextFrames();
                     break;
                 }
@@ -166,16 +163,5 @@ public class Sender extends SocketController {
         FrameModel frameModel = FrameFactory.createReceptionFrame(latestConfirmedPosition);
         sendFrame(frameModel);
         busy = false;
-    }
-
-    @Override
-    public void close() {
-        try {
-            reader.close();
-        } catch (IOException e) {
-            System.out.print("Error closing reader");
-            e.printStackTrace();
-        }
-        super.close();
     }
 }
