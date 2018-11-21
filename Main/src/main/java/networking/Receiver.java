@@ -112,7 +112,7 @@ public class Receiver extends SocketController {
     @Override
     public void timeOutReached(int position) {
         isBusy.set(true);
-        FrameModel frame = FrameFactory.createReceptionFrame(getCurrentPosition());
+        FrameModel frame = FrameFactory.createReceptionFrame(getCurrentPositionN());
         sendFrame(frame);
         isBusy.set(false);
     }

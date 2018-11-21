@@ -12,7 +12,7 @@ public class FrameFactory {
         return new RequestFrameModel(RequestFrameModel.RequestType.CLOSE_CONNEXION);
     }
 
-    public static FrameModel createInformationFrame(int id, String binaryData) {
+    public static InformationFrameModel createInformationFrame(int id, String binaryData) {
         return new InformationFrameModel(id, binaryData);
     }
 
@@ -22,5 +22,9 @@ public class FrameFactory {
 
     public static FrameModel createRejectionFrame(int rejectedFrameId) {
         return new ReceptionFrameModel(rejectedFrameId);
+    }
+
+    public static FrameModel pBitFrame(int pBitFrameId) {
+        return new ReceptionFrameModel(pBitFrameId);
     }
 }

@@ -52,8 +52,9 @@ public class SocketMonitorThread extends Thread {
         try {
             String input;
             ArrayList<FrameModel> cumulatedFrames = new ArrayList<>();
-            while ((input = in.readUTF()) != null) { //TODO ajouter condition?
-                System.out.println(input);
+            while (true) { //TODO ajouter condition?
+                input = in.readUTF();
+                System.out.println("received : "+DataManager.splitMessageIntoFrames(input)[0].toString());
                 if(socketController.isBusy()) {
                     cumulatedFrames.addAll(Arrays.asList(DataManager.splitMessageIntoFrames(input)));
                 } else {

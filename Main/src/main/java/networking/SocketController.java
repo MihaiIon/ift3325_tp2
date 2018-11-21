@@ -18,7 +18,7 @@ public abstract class SocketController {
     private Disposable packetsSuscription;
     private Disposable timeOutsSuscription;
 
-    private int currentPosition;
+    private int currentPositionN;
 
     private int goBackN;
 
@@ -78,6 +78,7 @@ public abstract class SocketController {
     void sendFrame(FrameModel frame) {
         try {
             out.writeUTF(frame.toBinary());
+            out.flush();
         } catch (Exception e) {
             System.out.println("Error sending data :");
             e.printStackTrace();
@@ -85,16 +86,16 @@ public abstract class SocketController {
         }
     }
 
-    public int getCurrentPosition() {
-        return currentPosition;
+    public int getCurrentPositionN() {
+        return currentPositionN;
     }
 
-    public void setCurrentPosition(int currentPosition) {
-        this.currentPosition = currentPosition;
+    public void setCurrentPositionN(int currentPositionN) {
+        this.currentPositionN = currentPositionN;
     }
 
-    public void incrementCurrentPosition() {
-        currentPosition ++;
+    public void incrementCurrentPositionN() {
+        currentPositionN = nextPos(currentPositionN);
     }
 
     public int getGoBackN() {
@@ -109,7 +110,7 @@ public abstract class SocketController {
         return pos > getGoBackN() ? 0 : pos + 1;
     }
 
-    protected int prevPos(int pos) {
+    protected int prevPosN(int pos) {
         return pos == 0 ? getGoBackN() : pos - 1;
     }
 }

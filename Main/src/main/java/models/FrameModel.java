@@ -65,7 +65,7 @@ public class FrameModel {
             case TERMINATE_CONNECTION_REQUEST:
                 return new RequestFrameModel(CLOSE_CONNEXION, checkSum);
             case P_BITS:
-                return null;
+                return new PBitFrameModel(metadata, checkSum);
             default:
                 return null;
         }

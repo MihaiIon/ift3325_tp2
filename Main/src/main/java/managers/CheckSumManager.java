@@ -1,5 +1,7 @@
 package managers;
 
+import models.FrameModel;
+
 public class CheckSumManager {
 
     // Attributes.
@@ -36,6 +38,14 @@ public class CheckSumManager {
      */
     public static boolean isFrameContentValid(String frameContent) {
         return computeReminder(frameContent).equals(padding);
+    }
+
+    /**
+     * Checks if the Frame's content is valid.
+     * @param frame the Frame.
+     */
+    public static boolean isFrameContentValid(FrameModel frame) {
+        return computeReminder(frame.getFrameContent()).equals(padding);
     }
 
     /**
