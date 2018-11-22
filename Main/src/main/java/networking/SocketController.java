@@ -87,7 +87,7 @@ public abstract class SocketController {
     void sendFrame(FrameModel frame) {
         try {
             System.out.println("Sending : \n" + frame);
-            out.writeUTF("011111100100001100000000000110010000111101111110");//frame.toBinary());
+            out.writeUTF(frame.toBinary());
             out.flush();
         } catch (Exception e) {
             System.out.println("Error sending data :");

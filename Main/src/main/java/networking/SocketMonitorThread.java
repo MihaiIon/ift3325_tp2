@@ -46,7 +46,7 @@ public class SocketMonitorThread extends Thread {
             while (true) { //TODO ajouter condition?
                 String input = in.readUTF();
                 System.out.println("Received " + input);
-                FrameModel[] receivedFrame = DataManager.splitMessageIntoFrames(input);
+                FrameModel[] receivedFrame = new FrameModel[]{FrameModel.convertStreamToFrame(input)};
                 System.out.println("---Received frames : ");
                 Arrays.stream(receivedFrame).forEach(frameModel ->
                         System.out.println(frameModel)
