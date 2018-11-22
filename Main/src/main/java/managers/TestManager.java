@@ -27,13 +27,13 @@ public class TestManager {
         // Receiving
         System.out.println("\n***** Receiving Frames  ****");
         ArrayList<FrameWindowModel> windows = new ArrayList<>();
-        FrameWindowModel window = new FrameWindowModel();
+        FrameWindowModel window = new FrameWindowModel(8);
         FrameModel receivedFrame;
         for (FrameModel frame : framesSent) {
             // Adjust window
             if (window.isFull()) {
                 windows.add(window);
-                window = new FrameWindowModel();
+                window = new FrameWindowModel(8);
             }
             // Parse binary data
             System.out.println("== Frame Created ==");

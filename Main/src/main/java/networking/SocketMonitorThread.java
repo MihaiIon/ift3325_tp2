@@ -23,6 +23,9 @@ public class SocketMonitorThread extends Thread {
 
     private PublishSubject<ArrayList<FrameModel>> packetsPublisher;
 
+    private AtomicInteger packetsReceived = new AtomicInteger(0);
+
+
     /**
      * Construit un moniteur de socket qui surveille les frames recues
      *
@@ -45,7 +48,9 @@ public class SocketMonitorThread extends Thread {
                 System.out.println("Received " + input);
                 FrameModel[] receivedFrame = new FrameModel[]{FrameModel.convertStreamToFrame(input)};
                 System.out.println("---Received frames : ");
-                Arrays.stream(receivedFrame).forEach(System.out::println);
+                Arrays.stream(receivedFrame).forEach(frameModel ->
+                        System.out.println(frameModel)
+                        );
                 System.out.println("---Received frames end ");
                 cumulatedFrames.addAll(Arrays.asList(receivedFrame));
                 packetsPublisher.onNext(cumulatedFrames);

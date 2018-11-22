@@ -1,15 +1,17 @@
 package models;
 
+import java.util.Arrays;
+
 public class FrameWindowModel {
 
     // Attributes
-    private FrameModel[] frames;
+    private final FrameModel[] frames;
 
     /**
      *
      */
-    public FrameWindowModel() {
-        frames = new FrameModel[8];
+    public FrameWindowModel(int size) {
+        frames = new FrameModel[size];
     }
 
     // ------------------------------------------------------------------------
@@ -57,4 +59,13 @@ public class FrameWindowModel {
     // Getters
 
     public FrameModel[] getFrames() { return frames; }
+
+    public int getPosition() {
+        for(int i = 0; i < frames.length; i++) {
+            if(frames[i] == null) {
+                return i;
+            }
+        }
+        return frames.length + 1;
+    }
 }

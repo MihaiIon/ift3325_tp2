@@ -3,6 +3,7 @@ package managers;
 import factories.FrameFactory;
 import models.FrameModel;
 import models.FrameWindowModel;
+import models.InformationFrameModel;
 
 import java.util.ArrayList;
 
@@ -19,9 +20,9 @@ public class DataManager {
      * Splits the provided <message> into Information Frames.
      * @param message The message to be sent to the receiver.
      */
-    public static FrameModel[] splitMessageIntoFrames(String message) {
+    public static InformationFrameModel[] splitMessageIntoFrames(String message) {
         String[] payloads = splitMessageIntoPayloads(message);
-        FrameModel[] frames = new FrameModel[payloads.length];
+        InformationFrameModel[] frames = new InformationFrameModel[payloads.length];
         for (int i = 0; i < frames.length; i++) {
             frames[i] = FrameFactory.createInformationFrame(i, payloads[i]);
         }
