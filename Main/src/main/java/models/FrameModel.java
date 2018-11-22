@@ -9,6 +9,8 @@ import static models.TypeModel.Type;
 import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
 import static models.RequestFrameModel.RequestType.CLOSE_CONNEXION;
 
+import java.util.Arrays;
+
 public class FrameModel {
 
     /**
@@ -40,7 +42,7 @@ public class FrameModel {
      * @param stream Stream of bits representing the Frame.
      * @return FrameModel Object.
      */
-    public static FrameModel convertStreamToFrame(String stream) {
+    private static FrameModel convertStreamToFrame(String stream) {
         // Save lengths
         int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
         int gLength = CheckSumManager.generator.length();
@@ -69,6 +71,57 @@ public class FrameModel {
             default:
                 return null;
         }
+    }
+
+    /**
+     * Converts a the provided binary data to a list of FrameModel Object.
+     * @param stream Stream of bits representing one or more Frames.
+     */
+    public static ArrayList<FrameModel> convertStreamToFrames(String stream) {
+        // Convert to iynary string.
+        String binaryFlag = ConversionManager.convertByteToString(DataManager.FLAG);
+        // Frames parsed.
+        ArrayList<FrameModel> frames = new ArrayList<>();
+        // True if we've found the first flag of a frame.
+        boolean startFlagfound = false; 
+        // True if we matched a flag. 
+        boolean match = false;
+        // Saved position of the start of a frame.
+        int saved = 0;
+
+        for(int i = 0; i < stream.length(); i++) {
+            if (stream.charAt(i) == binaryFlag.charAt(0)) {
+
+                // Match the flag.                
+                match = true;
+                for(int j = 1; j < binaryFlag.length(); j++) {
+                    if(stream.charAt(i+j) != binary.charAt(j)) {
+                        match = false;
+                        break;
+                    }
+                }
+
+                // We've found the start flag.
+                if (match && !startFlagfound) {
+                    startFlagfound = true;
+                }
+
+                // We've found the end flag.
+                else if (match && startFlagfound) {
+                    startFlagfound = false;
+                    // Extract Frame.
+                    i = i+binaryFlag.length();
+                    frames.add(FrameModel.convertStreamToFrame(stream.substring(saved, i)))
+                    saved = i;
+                }
+
+                // Reset
+                match = false;
+            }
+        }
+
+
+        return frames;
     }
 
     // ------------------------------------------------------------------------
