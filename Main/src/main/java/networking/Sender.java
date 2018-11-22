@@ -18,14 +18,10 @@ import java.util.Arrays;
 public class Sender extends SocketController {
 
     private int framePosition;
-
-    private ArrayList<InformationFrameModel> unconfirmedFrames = new ArrayList<>();
-
-    private boolean busy;
-
     private int latestConfirmedPosition;
 
-    private InformationFrameModel[] framesToSend;
+    private InformationFrameModel[] allFramesToSend;
+    private ArrayList<InformationFrameModel> unconfirmedFrames = new ArrayList<>();
 
     /**
      * Constructs a sender
@@ -51,6 +47,7 @@ public class Sender extends SocketController {
     /*
      *   https://www.journaldev.com/709/java-read-file-line-by-line
      *   Lit un fichier ligne par ligne et les envoie
+     *   @param filepath le path du fichier
      */
     private void readFile(String filepath) {
         try {
@@ -60,7 +57,7 @@ public class Sender extends SocketController {
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
-            framesToSend = DataManager.splitMessageIntoFrames(sb.toString());
+            allFramesToSend = DataManager.splitMessageIntoFrames(sb.toString());
         } catch (IOException e) {
             System.out.println("Reader could not open : " + filepath);
             e.printStackTrace();
@@ -75,7 +72,6 @@ public class Sender extends SocketController {
     public void sendFile(String filepath) {
         readFile(filepath);
         openConnection();
-        sendNextFrames();
     }
 
     private void openConnection() {
@@ -87,15 +83,19 @@ public class Sender extends SocketController {
      *
      */
     private void sendNextFrames() {
-        //TODO check si frame non confirmées doivent etre envoyé
-        unconfirmedFrames.forEach(this::sendFrame);
+        System.out.println("Sending next frames");
+        //TODO check si frame non confirmées doivent etre envoyé?
+
+        ArrayList<FrameModel> frameModelsToSend = new ArrayList<>(unconfirmedFrames);
+        while (canSend(framePosition)) {
+            InformationFrameModel frame = allFramesToSend[framePosition];
+            unconfirmedFrames.add(frame);
+            frameModelsToSend.add(frame);
+            framePosition ++;
+        }
+
         try {
-            while (canSend(framePosition)) {
-                    InformationFrameModel frame = framesToSend[framePosition];
-                    unconfirmedFrames.add(frame);
-                    framePosition ++;
-                    super.sendFrame(frame);
-                }
+            sendFrames(frameModelsToSend);
         } catch (Exception e) {
             System.out.println("Error sending lines");
             e.printStackTrace();
@@ -116,13 +116,9 @@ public class Sender extends SocketController {
         latestConfirmedPosition = to;
     }
 
-    public boolean isBusy() {
-        return busy;
-    }
-
     @Override
     public void packetsReceived(ArrayList<FrameModel> framesReceived) {
-        busy = true;
+        super.packetsReceived(framesReceived);
         framesAnalysis : for(int i = 0; i < framesReceived.size(); i++) {
             FrameModel frameModel = framesReceived.get(i);
 
@@ -169,14 +165,20 @@ public class Sender extends SocketController {
                 break;
             }
         }
-        busy = false;
     }
 
     @Override
     public void timeOutReached(int position) {
-        busy = true;
-        FrameModel frameModel = FrameFactory.createReceptionFrame(nextPos(latestConfirmedPosition));
-        sendFrame(frameModel);
-        busy = false;
+        switch (getState()) {
+            case Open: {
+                FrameModel frameModel = FrameFactory.createReceptionFrame(nextPos(latestConfirmedPosition));
+                sendFrame(frameModel);
+                break;
+            }
+            case Waiting: {
+                openConnection();
+                break;
+            }
+        }
     }
 }
