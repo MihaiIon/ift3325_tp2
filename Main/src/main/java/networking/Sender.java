@@ -127,17 +127,20 @@ public class Sender extends SocketController {
             if(CheckSumManager.isFrameContentValid(frameModel)) {
                 switch (getState()) {
                     case Waiting: {
-                        switch (frameModel.getType()) {
-                            case FRAME_RECEPTION: {
-                                setState(State.Open);
-                                sendNextFrames();
-                                return;
-                            }
-                            default: {
-                                logWrongRequestType("waiting", frameModel.getType().toString());
+                        if(frameModel.hasErrors()) {
+                            openConnection();
+                        } else {
+                            switch (frameModel.getType()) {
+                                case FRAME_RECEPTION: {
+                                    setState(State.Open);
+                                    sendNextFrames();
+                                    return;
+                                }
+                                default: {
+                                    logWrongRequestType("waiting", frameModel.getType().toString());
+                                }
                             }
                         }
-
                         break;
                     }
                     case Open: {

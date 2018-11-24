@@ -4,6 +4,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import models.FrameModel;
+import utils.BitFlipper;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -83,7 +84,7 @@ public abstract class SocketController {
     void sendFrame(FrameModel frame) {
         try {
             System.out.println("Sending : \n" + frame);
-            out.writeUTF(frame.toBinary());
+            out.writeUTF(BitFlipper.flipRandomBits(frame.toBinary()));
             out.flush();
             frameNumber.incrementAndGet();
         } catch (Exception e) {
@@ -107,7 +108,7 @@ public abstract class SocketController {
         System.out.println("---Batch sending end");
 
         try {
-            out.writeUTF(sb.toString());
+            out.writeUTF(BitFlipper.flipRandomBits(sb.toString()));
             out.flush();
             frameNumber.incrementAndGet();
         } catch (Exception e) {
