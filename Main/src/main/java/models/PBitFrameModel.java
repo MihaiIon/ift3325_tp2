@@ -6,10 +6,10 @@ public class PBitFrameModel extends FrameModel {
 
     /**
      * Default constructor.
-     * @param receivedFrameId Identifier of the received Frame.
+     * @param bitLength Identifier of the received Frame.
      */
-    public PBitFrameModel(int receivedFrameId) {
-        super(TypeModel.Type.P_BITS, new ByteModel(receivedFrameId));
+    public PBitFrameModel(int bitLength) {
+        super(TypeModel.Type.P_BITS, new ByteModel(bitLength));
     }
 
     /**
@@ -24,5 +24,5 @@ public class PBitFrameModel extends FrameModel {
     // ------------------------------------------------------------------------
     // Getters
 
-    public int getRecievedFrameId() { return getMetadata().toInt(); }
+    public int getBitLengthId() { return getMetadata().toInt(); }
 }

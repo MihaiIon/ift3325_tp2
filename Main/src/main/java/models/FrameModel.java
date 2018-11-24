@@ -9,6 +9,7 @@ import static models.TypeModel.Type;
 import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
 import static models.RequestFrameModel.RequestType.CLOSE_CONNEXION;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FrameModel {
@@ -42,7 +43,7 @@ public class FrameModel {
      * @param stream Stream of bits representing the Frame.
      * @return FrameModel Object.
      */
-    private static FrameModel convertStreamToFrame(String stream) {
+    public static FrameModel convertStreamToFrame(String stream) {
         // Save lengths
         int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
         int gLength = CheckSumManager.generator.length();
@@ -77,7 +78,7 @@ public class FrameModel {
      * Converts a the provided binary data to a list of FrameModel Object.
      * @param stream Stream of bits representing one or more Frames.
      */
-    public static ArrayList<FrameModel> convertStreamToFrames(String stream) {
+    public static ArrayList<FrameModel> convertStreamToFrames(final String stream) {
         // Convert to iynary string.
         String binaryFlag = ConversionManager.convertByteToString(DataManager.FLAG);
         // Frames parsed.
@@ -89,13 +90,35 @@ public class FrameModel {
         // Saved position of the start of a frame.
         int saved = 0;
 
+        String localStream = stream;
+
+        while(localStream != null && localStream.length() > 0) {
+            int startPos = localStream.indexOf(binaryFlag);
+
+            //Si on ne trouve pas le flag ou sil se trouve a la fin du stream
+            if(startPos < 0 || startPos > localStream.length() - binaryFlag.length()) break;
+
+            //On trouve la position de la fin du steam
+            int endPos = localStream.indexOf(binaryFlag, startPos + 1);
+
+            //Si on ne trouve pas de fin on quitte la bouble
+            if(endPos < 0) break;
+
+            String frameSteam = localStream.substring(startPos, endPos + binaryFlag.length());
+
+            frames.add(FrameModel.convertStreamToFrame(frameSteam));
+
+            localStream = localStream.substring(endPos + binaryFlag.length());
+        }
+
+        /*TODO
         for(int i = 0; i < stream.length(); i++) {
             if (stream.charAt(i) == binaryFlag.charAt(0)) {
 
                 // Match the flag.                
                 match = true;
-                for(int j = 1; j < binaryFlag.length(); j++) {
-                    if(stream.charAt(i+j) != binary.charAt(j)) {
+                for(int j = 1; i+j <stream.length() && j < binaryFlag.length(); j++) {
+                    if(stream.charAt(i+j) != binaryFlag.charAt(j)) {
                         match = false;
                         break;
                     }
@@ -111,14 +134,14 @@ public class FrameModel {
                     startFlagfound = false;
                     // Extract Frame.
                     i = i+binaryFlag.length();
-                    frames.add(FrameModel.convertStreamToFrame(stream.substring(saved, i)))
+                    frames.add(FrameModel.convertStreamToFrame(stream.substring(saved, i)));
                     saved = i;
                 }
 
                 // Reset
                 match = false;
             }
-        }
+        }*/
 
 
         return frames;

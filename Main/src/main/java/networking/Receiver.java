@@ -2,15 +2,13 @@ package networking;
 
 import factories.FrameFactory;
 import managers.DataManager;
-import models.FrameModel;
-import models.FrameWindowModel;
-import models.InformationFrameModel;
-import models.TypeModel;
+import models.*;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Receiver extends SocketController {
 
@@ -33,14 +31,15 @@ public class Receiver extends SocketController {
 
     public void packetsReceived(ArrayList<FrameModel> packetModels) {
         super.packetsReceived(packetModels);
-        packetModels.forEach(frame -> {
-            //TODO if checksum
-
+        for (int i = 0, packetModelsSize = packetModels.size(); i < packetModelsSize; i++) {
+            FrameModel frame = packetModels.get(i);
+            int latestInformationToConfirm = -1;
             switch (getState()) {
                 case Waiting: {
-                    if(frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
-                            setState(State.Open);
-                            frameWindowModels.add(new FrameWindowModel(getGoBackN()));
+                    if (frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
+                        setState(State.Open);
+                        sendFrame(FrameFactory.createReceptionFrame(0));
+                        frameWindowModels.add(new FrameWindowModel());
                     } else {
                         logWrongRequestType("Connection request", frame.getType().toString());
                     }
@@ -48,40 +47,46 @@ public class Receiver extends SocketController {
                 }
                 case Open: {
                     switch (frame.getType()) {
-                            case TERMINATE_CONNECTION_REQUEST: {
-                                    setState(State.Closed);
-                                    printReceivedMessage();
-                                    close();
-                                break;
+                        case TERMINATE_CONNECTION_REQUEST: {
+                            setState(State.Closed);
+                            printReceivedMessage();
+                            close();
+                            break;
+                        }
+                        case INFORMATION: {
+                            InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
+
+                            if (getLatestFrameWindow().isFull()) {
+                                frameWindowModels.add(new FrameWindowModel());
                             }
-                            case INFORMATION: {
-                                InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
-                                if(getLatestFrameWindow().addFrame(informationFrameModel)) {
-                                    if(getLatestFrameWindow().isFull()) {
-                                        frameWindowModels.add(new FrameWindowModel(getGoBackN()));
-                                    }
+
+                            //Verifie si lindex de linformation recue est bon
+                            if (getLatestFrameWindow().addFrame(informationFrameModel)) {
+                                //Pour repondre uniquement si cest la derniere frame dinformation recue de la batch
+                                if(i == packetModelsSize -1) {
                                     FrameModel frameModel = FrameFactory.createReceptionFrame(informationFrameModel.getId());
                                     sendFrame(frameModel);
-                                    printReceivedMessage();
-                                } else {
-                                    FrameModel frameModel = FrameFactory.createRejectionFrame(getLatestFrameWindow().getPosition());
-                                    sendFrame(frameModel);
-                                    printReceivedMessage();
                                 }
-                                break;
+                            } else {
+                                //Lindex nest pas bon alors on rejette la frame
+                                FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 7) % 8);
+                                sendFrame(frameModel);
                             }
-                            case REJECTED_FRAME: {
-                                //TODO possible?
-                                break;
-                            }
-                            case FRAME_RECEPTION: {
-                                //TODO possible?
-                                break;
-                            }
-                            case P_BITS: {
-                                //TODO possible?
-                            }
+                            printReceivedMessage();
+                            break;
                         }
+                        case REJECTED_FRAME: {
+                            //TODO possible?
+                            break;
+                        }
+                        case FRAME_RECEPTION: {
+                            //TODO possible?
+                            break;
+                        }
+                        case P_BITS: {
+                            //TODO possible?
+                        }
+                    }
 
                     break;
                 }
@@ -90,22 +95,16 @@ public class Receiver extends SocketController {
                     break;
                 }
             }
-        });
+        }
     }
 
-    private void logWrongRequestType(String expected, String found) {
-        System.out.println("-----------------------------");
-        System.out.println("Wrong frame type received :");
-        System.out.println("expected : " + expected);
-        System.out.println("received : " + found);
-        System.out.println("-----------------------------");
-    }
 
     @Override
     public void timeOutReached(int position) {
         switch (getState()) {
             case Open: {
-                FrameModel frame = FrameFactory.createReceptionFrame(getCurrentPositionN());
+                int positionN = getLatestFrameWindow().getPosition();
+                FrameModel frame = FrameFactory.createReceptionFrame(positionN);
                 sendFrame(frame);
                 break;
             }
@@ -131,7 +130,7 @@ public class Receiver extends SocketController {
 
     private void printReceivedMessage() {
         System.out.println("--------Received message :");
-        DataManager.extractMessageFromFrames(frameWindowModels);
+        System.out.println(DataManager.extractMessageFromFrames(frameWindowModels));
         System.out.println("--------Received message end");
     }
 }

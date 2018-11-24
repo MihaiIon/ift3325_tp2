@@ -23,10 +23,6 @@ public abstract class SocketController {
 
     private AtomicInteger frameNumber = new AtomicInteger();
 
-    private int currentPositionN;
-
-    private int goBackN;
-
     public void packetsReceived(ArrayList<FrameModel> packetsReceived) {
         frameNumber.incrementAndGet();
     };
@@ -89,13 +85,17 @@ public abstract class SocketController {
             System.out.println("Sending : \n" + frame);
             out.writeUTF(frame.toBinary());
             out.flush();
+            frameNumber.incrementAndGet();
         } catch (Exception e) {
             System.out.println("Error sending data :");
             e.printStackTrace();
             System.exit(-1);
         }
     }
-
+    /**
+     * Envoie une série de frame en un seul coup
+     * @param frameModels the frames to send throught the socket
+     */
     void sendFrames(ArrayList<FrameModel> frameModels) {
         StringBuilder sb = new StringBuilder();
         System.out.println("---Batch sending :");
@@ -109,6 +109,7 @@ public abstract class SocketController {
         try {
             out.writeUTF(sb.toString());
             out.flush();
+            frameNumber.incrementAndGet();
         } catch (Exception e) {
             System.out.println("Error sending data :");
             e.printStackTrace();
@@ -118,49 +119,29 @@ public abstract class SocketController {
     }
 
     private void addTimeOut() {
-        new TimeOutMonitor(frameNumber.incrementAndGet()).run();
-    }
-
-    public int getCurrentPositionN() {
-        return currentPositionN;
-    }
-
-    public void setCurrentPositionN(int currentPositionN) {
-        this.currentPositionN = currentPositionN;
-    }
-
-    public void incrementCurrentPositionN() {
-        currentPositionN = nextPos(currentPositionN);
-    }
-
-    public int getGoBackN() {
-        return goBackN;
-    }
-
-    public void setGoBackN(int goBackN) {
-        this.goBackN = goBackN;
+        new TimeOutMonitor(frameNumber.incrementAndGet()).start();
     }
 
     int nextPos(int pos) {
-        return pos > getGoBackN() ? 0 : pos + 1;
+        return pos >= 7 ? 0 : pos + 1;
     }
 
-    protected int prevPosN(int pos) {
-        return pos == 0 ? getGoBackN() : pos - 1;
+    int prevPosN(int pos) {
+        return pos == 0 ? 7 : pos - 1;
     }
 
-    public State getState() {
+    State getState() {
         return state;
     }
 
-    public void setState(State state) {
+    void setState(State state) {
         this.state = state;
     }
 
     /*
      * Attends 3 secondes et averti que le timeout de 3 secondes a été atteint
      */
-    private class TimeOutMonitor implements Runnable {
+    private class TimeOutMonitor extends Thread {
 
         final int packetNumber;
 
@@ -179,4 +160,13 @@ public abstract class SocketController {
             }
         }
     }
+
+    void logWrongRequestType(String expected, String found) {
+        System.out.println("-----------------------------");
+        System.out.println("Wrong frame type received :");
+        System.out.println("expected : " + expected);
+        System.out.println("received : " + found);
+        System.out.println("-----------------------------");
+    }
+
 }

@@ -33,14 +33,14 @@ public class Main {
             String hostname = args[1];
             int port = Integer.valueOf(args[2]);
             String filePath = args[3];
-            int backN = Integer.valueOf(args[4]);
+            int protocol = Integer.valueOf(args[4]);
 
-            if(backN < 1) {
-                System.out.println("backn must be > 0");
+            if(protocol != 0) {
+                System.out.println("only backn is supported : 0");
                 System.exit(-1);
             }
 
-            Sender sender = new Sender(hostname, port, backN);
+            Sender sender = new Sender(hostname, port);
             sender.sendFile(filePath);
 
         } else {

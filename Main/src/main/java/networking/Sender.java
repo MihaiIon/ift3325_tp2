@@ -14,11 +14,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class Sender extends SocketController {
 
-    private int framePosition;
-    private int latestConfirmedPosition;
+    private int posToSend = 0;
 
     private InformationFrameModel[] allFramesToSend;
     private ArrayList<InformationFrameModel> unconfirmedFrames = new ArrayList<>();
@@ -27,11 +28,9 @@ public class Sender extends SocketController {
      * Constructs a sender
      * @param hostname the hostname of the receiver
      * @param port the port of the receiver
-     * @param goBackN the size of a frame window
      */
-    public Sender(String hostname, int port, int goBackN) {
-        setGoBackN(goBackN);
-        latestConfirmedPosition = prevPosN(goBackN);
+    public Sender(String hostname, int port) {
+        setState(State.Waiting);
         try
         {
             Socket socket = new Socket(hostname, port);
@@ -75,45 +74,47 @@ public class Sender extends SocketController {
     }
 
     private void openConnection() {
+
         sendFrame(FrameFactory.createConnexionFrame());
     }
 
 
     /**
-     *
+     * Envoie les frames suivantes sil en reste a envoyer ou un demande de déconnection sinon
      */
     private void sendNextFrames() {
-        System.out.println("Sending next frames");
-        //TODO check si frame non confirmées doivent etre envoyé?
+        System.out.println("Sending next frames : " + posToSend);
 
-        ArrayList<FrameModel> frameModelsToSend = new ArrayList<>(unconfirmedFrames);
-        while (canSend(framePosition)) {
-            InformationFrameModel frame = allFramesToSend[framePosition];
-            unconfirmedFrames.add(frame);
-            frameModelsToSend.add(frame);
-            framePosition ++;
+        if(posToSend + 1 == allFramesToSend.length) {
+            sendFrame(FrameFactory.createDeconnexionFrame());
+        } else {
+            ArrayList<FrameModel> frameModelsToSend = new ArrayList<>(unconfirmedFrames);
+            int framePosition = posToSend;
+            while (framePosition != (posToSend + 7) % 8 && framePosition < allFramesToSend.length) {
+                InformationFrameModel frame = allFramesToSend[framePosition];
+                if (!unconfirmedFrames.contains(frame)) {
+                    unconfirmedFrames.add(frame);
+                }
+                frameModelsToSend.add(frame);
+                System.out.println("Sending frame at position : " + framePosition);
+                framePosition+=1;
+            }
+
+            try {
+                sendFrames(frameModelsToSend);
+            } catch (Exception e) {
+                System.out.println("Error sending lines");
+                e.printStackTrace();
+                System.exit(-1);
+            }
         }
-
-        try {
-            sendFrames(frameModelsToSend);
-        } catch (Exception e) {
-            System.out.println("Error sending lines");
-            e.printStackTrace();
-            System.exit(-1);
-        }
-    }
-
-    private boolean canSend(int position) {
-        return position != latestConfirmedPosition;
     }
 
     private void confirmPackets(int to) {
-        while (getCurrentPositionN() != to) {
-            int finalConfirmPosition = getCurrentPositionN();
-            unconfirmedFrames = new ArrayList(Arrays.asList(unconfirmedFrames.stream().filter(x-> (x.getId() != finalConfirmPosition)).toArray()));
-            incrementCurrentPositionN();
-        }
-        latestConfirmedPosition = to;
+        do  {
+            final int finalPos = posToSend % 8;
+            unconfirmedFrames.removeIf(f->f.getId() == finalPos);
+        } while (posToSend++ % 8 != to % 8);
     }
 
     @Override
@@ -124,44 +125,55 @@ public class Sender extends SocketController {
 
             //make sure frame is valid
             if(CheckSumManager.isFrameContentValid(frameModel)) {
-                switch (frameModel.getType()) {
-                    case FRAME_RECEPTION: {
-                        ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
-                        confirmPackets(receptionFrameModel.getRecievedFrameId());
+                switch (getState()) {
+                    case Waiting: {
+                        switch (frameModel.getType()) {
+                            case FRAME_RECEPTION: {
+                                setState(State.Open);
+                                sendNextFrames();
+                                return;
+                            }
+                            default: {
+                                logWrongRequestType("waiting", frameModel.getType().toString());
+                            }
+                        }
 
-                        //Only send next frames if all previous received frames were analysed
-                        if(i == framesReceived.size() - 1) {
-                            sendNextFrames();
-                            break framesAnalysis;
+                        break;
+                    }
+                    case Open: {
+                        switch (frameModel.getType()) {
+                            case FRAME_RECEPTION: {
+                                ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
+                                confirmPackets(receptionFrameModel.getRecievedFrameId());
+
+                                //Only send next frames if all previous received frames were analysed
+                                if (i == framesReceived.size() - 1) {
+                                    sendNextFrames();
+                                    break framesAnalysis;
+                                }
+                                break;
+                            }
+                            case REJECTED_FRAME: {
+                                RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
+                                int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
+                                confirmPackets(confirmedPosition);
+                                sendNextFrames();
+                                break framesAnalysis;
+                            }
+                            case TERMINATE_CONNECTION_REQUEST: {
+                                //TODO possible?
+                                break;
+                            }
+                            case P_BITS: {
+                                sendNextFrames();
+                                break framesAnalysis;
+                            }
                         }
                         break;
                     }
-                    case REJECTED_FRAME: {
-                        RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
-                        int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
-                        confirmPackets(confirmedPosition);
-                        sendNextFrames();
-                        break framesAnalysis;
-                    }
-                    case INFORMATION: {
-                        //TODO possible?
-                        break;
-                    }
-                    case TERMINATE_CONNECTION_REQUEST: {
-                        //TODO possible?
-                        break;
-                    }
-                    case CONNECTION_REQUEST: {
-                        //TODO possible?
-                        break;
-                    }
-                    case P_BITS: {
-                        sendNextFrames();
-                        break framesAnalysis;
-                    }
                 }
             } else {
-                sendFrame(FrameFactory.createRejectionFrame(nextPos(latestConfirmedPosition)));
+                sendFrame(FrameFactory.createRejectionFrame(posToSend));
                 break;
             }
         }
@@ -171,7 +183,7 @@ public class Sender extends SocketController {
     public void timeOutReached(int position) {
         switch (getState()) {
             case Open: {
-                FrameModel frameModel = FrameFactory.createReceptionFrame(nextPos(latestConfirmedPosition));
+                FrameModel frameModel = FrameFactory.createReceptionFrame(posToSend);
                 sendFrame(frameModel);
                 break;
             }

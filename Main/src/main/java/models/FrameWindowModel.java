@@ -10,8 +10,8 @@ public class FrameWindowModel {
     /**
      *
      */
-    public FrameWindowModel(int size) {
-        frames = new FrameModel[size];
+    public FrameWindowModel() {
+        frames = new FrameModel[8];
     }
 
     // ------------------------------------------------------------------------
