@@ -84,7 +84,8 @@ public abstract class SocketController {
     void sendFrame(FrameModel frame) {
         try {
             System.out.println("Sending : \n" + frame);
-            out.writeUTF(BitFlipper.flipRandomBits(frame.toBinary()));
+            String output = BitFlipper.flipRandomBits(frame.toBinary());
+            out.writeUTF(output);
             out.flush();
             frameNumber.incrementAndGet();
         } catch (Exception e) {
@@ -108,7 +109,8 @@ public abstract class SocketController {
         System.out.println("---Batch sending end");
 
         try {
-            out.writeUTF(BitFlipper.flipRandomBits(sb.toString()));
+            String output = BitFlipper.flipRandomBits(sb.toString());
+            out.writeUTF(output);
             out.flush();
             frameNumber.incrementAndGet();
         } catch (Exception e) {

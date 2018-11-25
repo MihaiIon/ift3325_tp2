@@ -3,10 +3,7 @@ package networking;
 import factories.FrameFactory;
 import managers.CheckSumManager;
 import managers.DataManager;
-import models.FrameModel;
-import models.InformationFrameModel;
-import models.ReceptionFrameModel;
-import models.RejectionFrameModel;
+import models.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -120,7 +117,7 @@ public class Sender extends SocketController {
     @Override
     public void packetsReceived(ArrayList<FrameModel> framesReceived) {
         super.packetsReceived(framesReceived);
-        framesAnalysis : for(int i = 0; i < framesReceived.size(); i++) {
+        for(int i = 0; i < framesReceived.size(); i++) {
             FrameModel frameModel = framesReceived.get(i);
 
             //make sure frame is valid
@@ -144,33 +141,40 @@ public class Sender extends SocketController {
                         break;
                     }
                     case Open: {
-                        switch (frameModel.getType()) {
-                            case FRAME_RECEPTION: {
-                                ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
-                                confirmPackets(receptionFrameModel.getRecievedFrameId());
+                        if(!frameModel.hasErrors()) {
+                            switch (frameModel.getType()) {
+                                case FRAME_RECEPTION: {
+                                    ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
+                                    confirmPackets(receptionFrameModel.getRecievedFrameId());
 
-                                //Only send next frames if all previous received frames were analysed
-                                if (i == framesReceived.size() - 1) {
-                                    sendNextFrames();
-                                    break framesAnalysis;
+                                    //Only send next frames if all previous received frames were analysed
+                                    if (i == framesReceived.size() - 1) {
+                                        sendNextFrames();
+                                        return;
+                                    }
+                                    break;
                                 }
-                                break;
+                                case REJECTED_FRAME: {
+                                    RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
+                                    int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
+                                    confirmPackets(confirmedPosition);
+                                    sendNextFrames();
+                                    return;
+                                }
+                                case TERMINATE_CONNECTION_REQUEST: {
+                                    //TODO possible?
+                                    break;
+                                }
+                                case P_BITS: {
+                                    sendNextFrames();
+                                    return;
+                                }
                             }
-                            case REJECTED_FRAME: {
-                                RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
-                                int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
-                                confirmPackets(confirmedPosition);
-                                sendNextFrames();
-                                break framesAnalysis;
-                            }
-                            case TERMINATE_CONNECTION_REQUEST: {
-                                //TODO possible?
-                                break;
-                            }
-                            case P_BITS: {
-                                sendNextFrames();
-                                break framesAnalysis;
-                            }
+                        } else {
+                            //frame has errors
+                            FrameModel pBitFrameModel = FrameFactory.pBitFrame(posToSend % 8);
+                            sendFrame(pBitFrameModel);
+                            break;
                         }
                         break;
                     }
@@ -186,7 +190,7 @@ public class Sender extends SocketController {
     public void timeOutReached(int position) {
         switch (getState()) {
             case Open: {
-                FrameModel frameModel = FrameFactory.createReceptionFrame(posToSend);
+                FrameModel frameModel = FrameFactory.pBitFrame(posToSend % 8);
                 sendFrame(frameModel);
                 break;
             }

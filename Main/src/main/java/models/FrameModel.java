@@ -1,5 +1,7 @@
 package models;
 
+import errors.InvalidFramesException;
+import factories.FrameFactory;
 import factories.TypeFactory;
 import managers.CheckSumManager;
 import managers.ConversionManager;
@@ -10,7 +12,6 @@ import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
 import static models.RequestFrameModel.RequestType.CLOSE_CONNEXION;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class FrameModel {
 
@@ -38,12 +39,14 @@ public class FrameModel {
         return false;
     }
 
+    protected FrameModel() {}
+
     /**
      * Converts the provided binary data to a FrameModel Object.
      * @param stream Stream of bits representing the Frame.
      * @return FrameModel Object.
      */
-    public static FrameModel convertStreamToFrame(String stream) {
+    public static FrameModel convertStreamToFrame(String stream) throws Exception{
         // Save lengths
         int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
         int gLength = CheckSumManager.generator.length();
@@ -104,10 +107,13 @@ public class FrameModel {
             //Si on ne trouve pas de fin on quitte la bouble
             if(endPos < 0) break;
 
-            String frameSteam = localStream.substring(startPos, endPos + binaryFlag.length());
+            String frameStream = localStream.substring(startPos, endPos + binaryFlag.length());
 
-            frames.add(FrameModel.convertStreamToFrame(frameSteam));
-
+            try {
+                frames.add(FrameModel.convertStreamToFrame(frameStream));
+            } catch (Exception e) {
+                frames.add(FrameFactory.createInvalidFrame(frameStream));
+            }
             localStream = localStream.substring(endPos + binaryFlag.length());
         }
 

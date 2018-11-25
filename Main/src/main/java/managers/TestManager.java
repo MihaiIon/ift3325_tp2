@@ -28,7 +28,7 @@ public class TestManager {
         System.out.println("\n***** Receiving Frames  ****");
         ArrayList<FrameWindowModel> windows = new ArrayList<>();
         FrameWindowModel window = new FrameWindowModel();
-        FrameModel receivedFrame;
+        FrameModel receivedFrame = null;
         for (FrameModel frame : framesSent) {
             // Adjust window
             if (window.isFull()) {
@@ -37,7 +37,11 @@ public class TestManager {
             }
             // Parse binary data
             System.out.println("== Frame Created ==");
-            receivedFrame = FrameModel.convertStreamToFrame(frame.toBinary());
+            try {
+                receivedFrame = FrameModel.convertStreamToFrame(frame.toBinary());
+            } catch (Exception e) {
+
+            }
             if (receivedFrame != null && !receivedFrame.hasErrors()) {
                 if(window.addFrame(receivedFrame)){
                     System.out.println(receivedFrame);

@@ -47,7 +47,7 @@ public class Receiver extends SocketController {
                     break;
                 }
                 case Open: {
-                    if(frame.hasErrors()) {
+                    if(!frame.hasErrors()) {
                         switch (frame.getType()) {
                             case TERMINATE_CONNECTION_REQUEST: {
                                 setState(State.Closed);
@@ -71,27 +71,28 @@ public class Receiver extends SocketController {
                                     }
                                 } else {
                                     //Lindex nest pas bon alors on rejette la frame
-                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 7) % 8);
+                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
                                     sendFrame(frameModel);
+                                    return;
                                 }
                                 printReceivedMessage();
                                 break;
                             }
-                            case REJECTED_FRAME: {
-                                //TODO possible?
-                                break;
-                            }
-                            case FRAME_RECEPTION: {
-                                //TODO possible?
-                                break;
-                            }
                             case P_BITS: {
-                                //TODO possible?
+                                PBitFrameModel frameModel = (PBitFrameModel) frame;
+                                int pos = getLatestFrameWindow().getPosition();
+                                sendFrame(FrameFactory.createReceptionFrame(pos));
+                                break;
+                            }
+                            default: {
+                                logWrongRequestType("terminate, information or pbit", frame.getType().toString());
                             }
                         }
                     } else {
-                        //La frame a une erreur
-
+                        //La frame a une erreur alors on la rejette
+                        FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
+                        sendFrame(frameModel);
+                        return;
                     }
 
                     break;
