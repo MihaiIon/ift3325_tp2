@@ -11,9 +11,9 @@ public class BitFlipper {
     private BitFlipper() {}
 
     public static String flipRandomBits(String bits) {
-        if(Math.random() > 0.85) {
+        if(Math.random() > 0.75) {
             StringBuilder sb = new StringBuilder(bits);
-            int pos = (int) Math.ceil(Math.random() * bits.length());
+            int pos = (int) Math.floor(Math.random() * bits.length());
             if(sb.charAt(pos) == '0') {
                 sb.setCharAt(pos, '1');
             } else {

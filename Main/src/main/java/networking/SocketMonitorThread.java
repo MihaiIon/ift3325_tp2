@@ -35,7 +35,7 @@ public class SocketMonitorThread extends Thread {
     }
 
     /*
-     * Écoute le socket et envoie des evenement lors que chaque reception
+     * Écoute le socket et envoie des evenements au publish subject lors que chaque reception
      */
     public void run() {
         try {

@@ -1,6 +1,5 @@
 package models;
 
-import errors.InvalidFramesException;
 import factories.FrameFactory;
 import factories.TypeFactory;
 import managers.CheckSumManager;

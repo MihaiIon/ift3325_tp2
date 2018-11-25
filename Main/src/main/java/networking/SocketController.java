@@ -87,12 +87,12 @@ public abstract class SocketController {
             String output = BitFlipper.flipRandomBits(frame.toBinary());
             out.writeUTF(output);
             out.flush();
-            frameNumber.incrementAndGet();
         } catch (Exception e) {
             System.out.println("Error sending data :");
             e.printStackTrace();
             System.exit(-1);
         }
+        addTimeOut();
     }
     /**
      * Envoie une série de frame en un seul coup
@@ -112,7 +112,6 @@ public abstract class SocketController {
             String output = BitFlipper.flipRandomBits(sb.toString());
             out.writeUTF(output);
             out.flush();
-            frameNumber.incrementAndGet();
         } catch (Exception e) {
             System.out.println("Error sending data :");
             e.printStackTrace();
@@ -159,6 +158,25 @@ public abstract class SocketController {
                     timeOutPublisher.onNext(packetNumber);
                 }
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class DelayedStream extends Thread {
+
+        final String stream;
+
+        DelayedStream(final String stream) {
+            this.stream = stream;
+        }
+
+        public void run() {
+            try {
+                Thread.sleep((long) (Math.random() * 3.1));
+                out.writeUTF(stream);
+                out.flush();
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }

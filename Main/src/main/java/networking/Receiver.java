@@ -38,13 +38,13 @@ public class Receiver extends SocketController {
                     if(!frame.hasErrors()) {
                         if (frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
                             setState(State.Open);
-                            sendFrame(FrameFactory.createReceptionFrame(0));
+                            sendFrame(FrameFactory.createConnexionFrame());
                             frameWindowModels.add(new FrameWindowModel());
                         } else {
                             logWrongRequestType("Connection request", frame.getType().toString());
                         }
                     }
-                    break;
+                    return;
                 }
                 case Open: {
                     if(!frame.hasErrors()) {
@@ -53,7 +53,7 @@ public class Receiver extends SocketController {
                                 setState(State.Closed);
                                 printReceivedMessage();
                                 close();
-                                break;
+                                return;
                             }
                             case INFORMATION: {
                                 InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
@@ -76,16 +76,22 @@ public class Receiver extends SocketController {
                                     return;
                                 }
                                 printReceivedMessage();
-                                break;
+                                return;
                             }
                             case P_BITS: {
                                 PBitFrameModel frameModel = (PBitFrameModel) frame;
                                 int pos = getLatestFrameWindow().getPosition();
                                 sendFrame(FrameFactory.createReceptionFrame(pos));
-                                break;
+                                return;
+                            }
+                            case CONNECTION_REQUEST: {
+                                //Il est possible que lémetteur est ouvert la connexion mais quil nait pas recu la coufirmation
+                                //et quil réessaie douvrir la connexion
+                                sendFrame(FrameFactory.createConnexionFrame());
+                                return;
                             }
                             default: {
-                                logWrongRequestType("terminate, information or pbit", frame.getType().toString());
+                                logWrongRequestType("terminate, information, connection request or pbit", frame.getType().toString());
                             }
                         }
                     } else {
@@ -98,7 +104,7 @@ public class Receiver extends SocketController {
                     break;
                 }
                 case Closed: {
-                    logWrongRequestType("None, request status is closed", frame.getType().toString());
+                    logWrongRequestType("None, receiver status is closed", frame.getType().toString());
                     break;
                 }
             }
