@@ -156,10 +156,26 @@ public class FrameModel {
     // Frame Model
 
     // Attributes
+    private String flag;
     private TypeModel type;
     private ByteModel metadata;
     private String data;
     private String checkSum;
+
+    /**
+     * Do not use this constructor unless you know what you're doing.
+     * @param flag, Custom Flag.
+     * @param t Frame's metadata.
+     * @param metadata Frame's metadata.
+     * @param data Frame's data.
+     */
+    public FrameModel(String flag, Type t, ByteModel metadata, String data, String checkSum) {
+        this.flag = flag;
+        this.type = TypeFactory.createTypeModel(t);
+        this.metadata = metadata;
+        this.data = data;
+        this.checkSum = checkSum;
+    }
 
     /**
      * Default constructor.
@@ -168,6 +184,7 @@ public class FrameModel {
      * @param data Frame's data.
      */
     public FrameModel(Type t, ByteModel metadata, String data) {
+        this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = data;
@@ -181,6 +198,7 @@ public class FrameModel {
      * @param data Frame's data.
      */
     public FrameModel(Type t, ByteModel metadata, String data, String checkSum) {
+        this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = data;
@@ -193,6 +211,7 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      */
     public FrameModel(Type t, ByteModel metadata) {
+        this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = "";
@@ -210,7 +229,6 @@ public class FrameModel {
      * Converts FrameModel object to binary number (String representation).
      */
     public String toBinary() {
-        String flag = ConversionManager.convertByteToString(DataManager.FLAG);
         String content = DataManager.addBitsStuffing(getFrameContent());
         return flag + content + flag;
     }

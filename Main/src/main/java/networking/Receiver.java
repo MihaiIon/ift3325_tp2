@@ -76,7 +76,7 @@ public class Receiver extends SocketController {
                                     return;
                                 }
                                 printReceivedMessage();
-                                return;
+                                break; // TODO
                             }
                             case P_BITS: {
                                 PBitFrameModel frameModel = (PBitFrameModel) frame;

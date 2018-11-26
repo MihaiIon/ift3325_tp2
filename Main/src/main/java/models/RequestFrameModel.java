@@ -1,7 +1,5 @@
 package models;
 
-import managers.ConversionManager;
-
 import static models.TypeModel.Type.CONNECTION_REQUEST;
 import static models.TypeModel.Type.TERMINATE_CONNECTION_REQUEST;
 

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class TestManager {
 
     public static void testMessageTransmission(String message) {
-        System.out.println("\n==================================================================");
+        System.out.println("\n\n\n\n\n==================================================================");
         System.out.println("\tTesting Transmission");
         System.out.println("==================================================================");
 
@@ -60,7 +60,7 @@ public class TestManager {
     }
 
     public static void testChecksum() {
-        System.out.println("\n==================================================================");
+        System.out.println("\n\n\n\n\n==================================================================");
         System.out.println("\tTesting CheckSumManager.computeCheckSum()");
         System.out.println("==================================================================");
 
@@ -84,5 +84,9 @@ public class TestManager {
         System.out.println("\nInput : " + ConversionManager.convertStreamToReadableStream(stream));
         System.out.println("Expected : " + ConversionManager.convertStreamToReadableStream("0000000000000000"));
         System.out.println("Computed : " + ConversionManager.convertStreamToReadableStream(CheckSumManager.computeCheckSum(stream)));
+    }
+
+    public static void testErrors() {
+
     }
 }

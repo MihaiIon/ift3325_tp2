@@ -14,7 +14,8 @@ public class TypeModel {
         FRAME_RECEPTION,
         REJECTED_FRAME,
         TERMINATE_CONNECTION_REQUEST,
-        P_BITS
+        P_BITS,
+        BAD_FRAME
     }
 
     /**
@@ -34,11 +35,13 @@ public class TypeModel {
                 return Type.REJECTED_FRAME;
             case (byte)'F':
                 return Type.TERMINATE_CONNECTION_REQUEST;
-            default:
+            case (byte) 'P':
                 return Type.P_BITS;
+            default:
+                return Type.BAD_FRAME;
         }
     }
-
+    
     // ------------------------------------------------------------------------
     // Constructor
 

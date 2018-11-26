@@ -2,6 +2,7 @@ package factories;
 
 import models.TypeModel;
 import static models.TypeModel.Type;
+import static models.TypeModel.Type.BAD_FRAME;
 
 public class TypeFactory {
 
@@ -20,8 +21,10 @@ public class TypeFactory {
                 return new TypeModel(type, 'R');
             case TERMINATE_CONNECTION_REQUEST:
                 return new TypeModel(type, 'F');
-            default:
+            case P_BITS:
                 return new TypeModel(type, 'P');
+            default:
+                return new TypeModel(type, 'X');
         }
     }
 }
