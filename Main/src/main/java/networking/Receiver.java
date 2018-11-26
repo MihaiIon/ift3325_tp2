@@ -14,7 +14,10 @@ public class Receiver extends SocketController {
     // Attributes
     private ServerSocket server;
     private ArrayList<FrameWindowModel> frameWindows = new ArrayList<>();
-    private byte framePoolSize = 0;
+
+    private boolean flushAllFrames = false;
+    private int rejectedFrameId = -1;
+    private int framePoolSize = 0;
     private static byte MAX_FRAME_POOL_SIZE = 6;
 
     /**
@@ -59,17 +62,33 @@ public class Receiver extends SocketController {
      *
      */
     private void sendReceptionFrame() {
-        int lastId = getLatestFrameWindow().getSize();
+        int lastId = getLatestFrameWindowSize();
         sendFrame(FrameFactory.createReceptionFrame(lastId == 0 ? 7 : lastId-1));
         framePoolSize = 0;
+        flushAllFrames = false;
     }
 
     /**
      *
      */
     private void sendRejectionFrame() {
-        int lastId = getLatestFrameWindow().getSize();
-        sendFrame(FrameFactory.createRejectionFrame(lastId));
+        flushAllFrames = true;
+        rejectedFrameId = getLatestFrameWindowSize();
+        sendFrame(FrameFactory.createRejectionFrame(rejectedFrameId));
+    }
+
+    /**
+     * @param frame
+     * @return True if all went good.
+     */
+    private boolean storeFrame(FrameModel frame) {
+        // Create new FrameWindow if needed.
+        int last = frameWindows.size()-1;
+        if(frameWindows.size() == 0 || frameWindows.get(last).isFull()) {
+            frameWindows.add(new FrameWindowModel());
+        }
+        // Insert frame into window.
+        return frameWindows.get(frameWindows.size() - 1).addFrame(frame);
     }
 
     /**
@@ -87,7 +106,6 @@ public class Receiver extends SocketController {
     @Override
     public void onTimeOutReached(int position) {
         if (getState() == State.CONNECTION_OPENED) {
-            if(frameWindows.size() == 1 && getLatestFrameWindow().getSize() == 0) return;
             sendReceptionFrame();
         }
     }
@@ -120,7 +138,6 @@ public class Receiver extends SocketController {
             case CONNECTION_REQUEST:
                 setState(State.CONNECTION_OPENED);
                 sendFrame(FrameFactory.createConnectionFrame());
-                frameWindows.add(new FrameWindowModel());
                 return true;
             default:
                 logWrongRequestType("Connection request", frame.getType().toString());
@@ -142,16 +159,17 @@ public class Receiver extends SocketController {
                 break;
             case INFORMATION:
                 InformationFrameModel informationFrame = (InformationFrameModel) frame;
-                FrameWindowModel fw = getLatestFrameWindow();
-                // If push succeeds...send ARK.
-                if(fw.addFrame(informationFrame)) {
-                    framePoolSize++;
-                    if (Math.random() > 0.75 || framePoolSize >= MAX_FRAME_POOL_SIZE) {
-                        sendReceptionFrame();
+                if(!flushAllFrames || informationFrame.getId() == rejectedFrameId) {
+                    // If push succeeds...send ARK.
+                    if(storeFrame(informationFrame)) {
+                        framePoolSize++;
+                        if (flushAllFrames || Math.random() > 0.75 || framePoolSize >= MAX_FRAME_POOL_SIZE) {
+                            sendReceptionFrame();
+                        }
+                        break;
                     }
-                    break;
+                    sendRejectionFrame();
                 }
-                sendRejectionFrame();
                 return false;
             case CONNECTION_REQUEST:
                 // Sender may have not received the connection request.
@@ -161,7 +179,9 @@ public class Receiver extends SocketController {
                 sendReceptionFrame();
                 break;
             case BAD_FRAME:
-                sendRejectionFrame();
+                if (!flushAllFrames) {
+                    sendRejectionFrame();
+                }
                 return false;
             default:
                 logWrongRequestType("terminate, information, connection request or pbit", frame.getType().toString());
@@ -173,8 +193,13 @@ public class Receiver extends SocketController {
     // ----------------------------------------------------------------------------------
     // Getters
 
-    public FrameWindowModel getLatestFrameWindow() {
-        return frameWindows.get(frameWindows.size()-1);
+
+    /**
+     *
+     * @return
+     */
+    private int getLatestFrameWindowSize() {
+        return frameWindows.get(frameWindows.size()-1).getSize();
     }
 }
 

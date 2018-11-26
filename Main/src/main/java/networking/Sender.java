@@ -1,19 +1,24 @@
 package networking;
 
+import factories.BadFrameFactory;
 import factories.FrameFactory;
 import managers.DataManager;
 import models.*;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Sender extends SocketController {
 
     // Attributes
-    private int savedFrameIndex =0;
-    private int currFrameIndex = 0;
-    private int lastFrameIdReceived = -1;
-    private int lastFrameIdSent = -1;
+    private boolean didReceiveRejectionFrameId = false;
+    private boolean isSendingInformationFrames = false;
+    private AtomicInteger rejectedFrameId = new AtomicInteger(-1);
+    private AtomicInteger savedFrameIndex = new AtomicInteger();
+    private AtomicInteger currFrameIndex = new AtomicInteger();
+    private AtomicInteger lastFrameIdReceived = new AtomicInteger();
+    private AtomicInteger lastFrameIdSent = new AtomicInteger(-1);
     private String filepath;
     private InformationFrameModel[] framesToBeSent;
 
@@ -51,35 +56,63 @@ public class Sender extends SocketController {
      *
      */
     private void sendPBitFrame() {
-        sendFrame(FrameFactory.pBitFrame(lastFrameIdSent));
+        sendFrame(FrameFactory.pBitFrame(lastFrameIdSent.get()));
     }
 
     /**
-     * Envoie les frames suivantes sil en reste a envoyer ou une demande de déconnection sinon
+     * Send Frames one by one until it fills the Receiver Frame pool.
      */
-    private void sendNextFrame() {
-        // Saved current position.
-        savedFrameIndex = currFrameIndex;
-        do {
-            // Retrieve next frame.
-            FrameModel frame = getNextFrame();
-            currFrameIndex++;
+    private void sendNextFrames() {
+        // If the Sender is not busy...
+        if(!isSendingInformationFrames) {
+            // Send frames.
+            isSendingInformationFrames = true;
+            while (isReceiverReady()) {
 
-            // Close connection if all frames were sent.
-            if(frame == null) {
-                sendFrame(FrameFactory.createDisconnectionFrame());
-                setState(State.CONNECTION_CLOSED);
-                return;
+                // Retrieve next frame.
+                FrameModel frame = getNextFrame();
+                currFrameIndex.incrementAndGet();
+
+                // Close connection if all frames were sent.
+                if(frame == null) {
+                    sendFrame(FrameFactory.createDisconnectionFrame());
+                    setState(State.CONNECTION_CLOSED);
+                    return;
+                }
+
+                // Send next Frame.
+                try {
+                    lastFrameIdSent.set(((InformationFrameModel) frame).getId());
+                    System.out.println(
+                            "Sending next frame " + currFrameIndex.get() + "/" + framesToBeSent.length
+                                    + " | id : " + lastFrameIdSent.get() + "."
+                    );
+                } catch (Exception e) {
+                    lastFrameIdSent.set((currFrameIndex.get()-1)%8);
+                    int badFrameIndex = ((int)Math.floor(Math.random() * 8));
+                    frame.setId(badFrameIndex);
+                    System.out.println(
+                            "Sending next frame (**BAD FRAME**) " + currFrameIndex.get() + "/" + framesToBeSent.length
+                                    + " | id : " + badFrameIndex + "."
+                    );
+                }
+                sendFrame(frame);
             }
 
-            // Send next frame.
-            lastFrameIdSent = ((InformationFrameModel) frame).getId();
-            System.out.println(
-                    "Sending next frame " + currFrameIndex + "/" + framesToBeSent.length
-                            + " | id : " + lastFrameIdSent + "."
-            );
-            sendFrame(frame);
-        } while ((lastFrameIdSent - lastFrameIdReceived) <  8);
+            // Liberate Sender.
+            isSendingInformationFrames = false;
+        }
+    }
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    private int fixIdRange(int id) {
+        if(currFrameIndex.get() == 0 && id < 0) return -1;
+        else if (id > 7) return id % 8;
+        return id < 0 ? 7 : id;
     }
 
     // ----------------------------------------------------------------------------------
@@ -98,48 +131,6 @@ public class Sender extends SocketController {
                 return false;
         }
     }
-//
-//            switch (getState()) {
-
-//                case CONNECTION_OPENED: {
-//                    if(!frameModel.hasErrors()) {
-//                        switch (frameModel.getType()) {
-//                            case FRAME_RECEPTION: {
-//                                ReceptionFrameModel receptionFrameModel = (ReceptionFrameModel) frameModel;
-//                                confirmFrames(receptionFrameModel.getRecievedFrameId());
-//
-//                                //Only send next frames if all previous received frames were analysed
-//                                if (i == framesReceived.size() - 1) {
-//                                    sendNextFrame();
-//                                    return;
-//                                }
-//                                break;
-//                            }
-//                            case REJECTED_FRAME: {
-//                                RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
-//                                int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
-//                                confirmFrames(confirmedPosition);
-//                                sendNextFrame();
-//                                return;
-//                            }
-//                            default: {
-//                                logWrongRequestType("frame reception or frame rejection", frameModel.getType().toString());
-//                                FrameModel pBitFrameModel = FrameFactory.pBitFrame(posToSend % 8);
-//                                sendFrame(pBitFrameModel);
-//                                break;
-//                            }
-//                        }
-//                    } else {
-//                        //frame has errors
-//                        FrameModel pBitFrameModel = FrameFactory.pBitFrame(posToSend % 8);
-//                        sendFrame(pBitFrameModel);
-//                        break;
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-
 
     /**
      * @param frame Received frame.
@@ -151,7 +142,7 @@ public class Sender extends SocketController {
             case CONNECTION_REQUEST:
                 setState(State.CONNECTION_OPENED);
                 framesToBeSent = DataManager.readFile(filepath);
-                sendNextFrame();
+                sendNextFrames();
                 break;
             default:
                 sendConnectionFrame();
@@ -168,9 +159,14 @@ public class Sender extends SocketController {
     boolean handleOnConnectionOpenedState(FrameModel frame) {
         switch (frame.getType()) {
             case REJECTED_FRAME:
+                RejectionFrameModel rejectionFrame = (RejectionFrameModel)frame;
+                handleOnFrameIdRejected(rejectionFrame.getRejectedFrameId());
+                sendNextFrames();
                 break;
             case FRAME_RECEPTION:
-                savedFrameIndex = currFrameIndex;
+                ReceptionFrameModel receptionFrame = (ReceptionFrameModel)frame;
+                handleOnFrameIdReceived(receptionFrame.getRecievedFrameId());
+                sendNextFrames();
                 break;
             default:
                 return false;
@@ -182,7 +178,9 @@ public class Sender extends SocketController {
     public void onTimeOutReached(int position) {
         switch (getState()) {
             case CONNECTION_OPENED: {
-                sendPBitFrame();
+                if(isReceiverReady() && !didReceiveRejectionFrameId) {
+                    sendNextFrames();
+                } else sendPBitFrame();
                 break;
             }
             case STANDBY: {
@@ -192,13 +190,96 @@ public class Sender extends SocketController {
         }
     }
 
-    // ----------------------------------------------------------------------------------
-    // Getters
+    /**
+     *
+     * @param id Received Frame id.
+     */
+    private void handleOnFrameIdReceived(int id) {
+        int rid = rejectedFrameId.get();
+        int ridd = fixIdRange(rid-1);
+        if(didReceiveRejectionFrameId && (rid == id || ridd == id)) {
+            didReceiveRejectionFrameId = false;
+            rejectedFrameId.set(-1);
+            handleOnFrameIdReceived(id);
+        } else {
+            setSavedFrameIndex(id);
+            lastFrameIdReceived.set(id);
+        }
+    }
 
+    /**
+     *
+     * @param id Rejected Frame id.
+     */
+    private void handleOnFrameIdRejected(int id) {
+        didReceiveRejectionFrameId = true;
+        // Update rejected id
+        rejectedFrameId.set(id);
+        // Update indexes
+        setSavedFrameIndex(id);
+        currFrameIndex.set(savedFrameIndex.get());
+    }
+
+    // ----------------------------------------------------------------------------------
+    // Getters & Setters
+
+    /**
+     *
+     * @return
+     */
+    private boolean isReceiverReady() {
+        return getReceiverFramePoolSize() < (didReceiveRejectionFrameId ? 1 : 8);
+    }
+
+    /**
+     *
+     * @return
+     */
+    private int getReceiverFramePoolSize() {
+        System.out.println("********* " + currFrameIndex.get());
+        System.out.println("********* " + savedFrameIndex.get());
+        return currFrameIndex.get() - savedFrameIndex.get();
+    }
+
+    /**
+     *
+     * @return
+     */
     private FrameModel getNextFrame() {
-        if(currFrameIndex < framesToBeSent.length) {
-            return framesToBeSent[currFrameIndex];
+        if(Math.random() > 0.9) {
+            return getBadFrame();
+        }
+        if(currFrameIndex.get() < framesToBeSent.length) {
+            return framesToBeSent[currFrameIndex.get()];
         }
         return null;
+    }
+
+    /**
+     * Provides a Bad Frame (for testing errors).
+     */
+    private FrameModel getBadFrame() {
+        BadFrame.BadFrameType[] types = BadFrame.BadFrameType.values();
+        return BadFrameFactory.createBadFrame(types[(int)Math.floor(Math.random() * types.length)]);
+    }
+
+    /**
+     * Updates the saved Frame index.
+     * @param id Received/Rejected Frame id.
+     */
+    private void setSavedFrameIndex(int id) {
+        // Get difference
+        boolean isAtFirstFrame = savedFrameIndex.get() == 0;
+        int lastId = isAtFirstFrame ? -1 : lastFrameIdReceived.get();
+        int newId = id <= lastId ? id + 8 : id;
+        int diff = lastId == -1 ? id : newId - lastId;
+        // Update atomic integer.
+        if(didReceiveRejectionFrameId){
+            savedFrameIndex.set(savedFrameIndex.get() + diff - (isAtFirstFrame ? 0 : 1));
+            lastFrameIdReceived.set(fixIdRange(id-1));
+        } else {
+            savedFrameIndex.set(savedFrameIndex.get() + diff);
+            lastFrameIdReceived.set(id);
+        }
     }
 }

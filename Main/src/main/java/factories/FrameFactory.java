@@ -21,10 +21,10 @@ public class FrameFactory {
     }
 
     public static FrameModel createRejectionFrame(int rejectedFrameId) {
-        return new ReceptionFrameModel(rejectedFrameId);
+        return new RejectionFrameModel(rejectedFrameId);
     }
 
     public static FrameModel pBitFrame(int pBitFrameId) {
-        return new ReceptionFrameModel(pBitFrameId);
+        return new PBitFrameModel(pBitFrameId);
     }
 }

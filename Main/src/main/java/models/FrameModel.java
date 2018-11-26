@@ -200,4 +200,12 @@ public class FrameModel {
     public String getFrameContent() {
         return type.toBinary() + metadata.toBinary() + data + checkSum;
     }
+
+    /**
+     * DANGER
+     * @param id
+     */
+    public void setId(int id) {
+        metadata = new ByteModel(id);
+    }
 }

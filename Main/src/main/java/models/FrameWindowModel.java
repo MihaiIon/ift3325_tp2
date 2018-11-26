@@ -25,7 +25,7 @@ public class FrameWindowModel {
     public boolean addFrame(FrameModel frame) {
         int id = ((InformationFrameModel) frame).getId();
         if (id == 0) {
-            if(frames[0] == null) {
+            if(getSize() == 0 && frames[0] == null) {
                 frames[0] = frame;
                 return true;
             }
