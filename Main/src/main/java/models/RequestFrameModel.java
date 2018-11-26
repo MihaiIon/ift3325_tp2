@@ -1,7 +1,7 @@
 package models;
 
-import static models.TypeModel.Type.CONNECTION_REQUEST;
-import static models.TypeModel.Type.TERMINATE_CONNECTION_REQUEST;
+import static models.FrameTypeModel.FrameType.CONNECTION_REQUEST;
+import static models.FrameTypeModel.FrameType.TERMINATE_CONNECTION_REQUEST;
 
 import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
 

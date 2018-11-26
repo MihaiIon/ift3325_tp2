@@ -2,13 +2,13 @@ package models;
 
 import managers.ConversionManager;
 
-public class TypeModel {
+public class FrameTypeModel {
 
     /**
-     * Used in the constructor to specify the type (role)
+     * Used in the constructor to specify the frameType (role)
      * of the packet that is sent.
      */
-    public enum Type {
+    public enum FrameType {
         INFORMATION,
         CONNECTION_REQUEST,
         FRAME_RECEPTION,
@@ -19,26 +19,26 @@ public class TypeModel {
     }
 
     /**
-     * Provides the Type represented by the provided stream of bits.
+     * Provides the FrameType represented by the provided stream of bits.
      * @param byteStream Stream of bits
      */
-    public static Type parseType (String byteStream) {
+    public static FrameType parseFrameType(String byteStream) {
         byte type = ConversionManager.convertStringToByte(byteStream);
         switch (type) {
             case (byte)'I':
-                return Type.INFORMATION;
+                return FrameType.INFORMATION;
             case (byte)'C':
-                return Type.CONNECTION_REQUEST;
+                return FrameType.CONNECTION_REQUEST;
             case (byte)'A':
-                return Type.FRAME_RECEPTION;
+                return FrameType.FRAME_RECEPTION;
             case (byte)'R':
-                return Type.REJECTED_FRAME;
+                return FrameType.REJECTED_FRAME;
             case (byte)'F':
-                return Type.TERMINATE_CONNECTION_REQUEST;
+                return FrameType.TERMINATE_CONNECTION_REQUEST;
             case (byte) 'P':
-                return Type.P_BITS;
+                return FrameType.P_BITS;
             default:
-                return Type.BAD_FRAME;
+                return FrameType.BAD_FRAME;
         }
     }
 
@@ -46,12 +46,12 @@ public class TypeModel {
     // Constructor
 
     // Attributes
-    private Type type;
+    private FrameType frameType;
     private char character;
     private byte value;
 
-    public TypeModel(Type type, char character){
-        this.type = type;
+    public FrameTypeModel(FrameType frameType, char character){
+        this.frameType = frameType;
         this.character = character;
         this.value = (byte) character;
     }
@@ -59,7 +59,7 @@ public class TypeModel {
     // ------------------------------------------------------------------------
     // Getters
 
-    public Type getType() { return type; }
+    public FrameType getType() { return frameType; }
     public byte getValue() { return value; }
     public char getCharacter() { return character; }
     public String toBinary() { return ConversionManager.convertByteToString(value); }

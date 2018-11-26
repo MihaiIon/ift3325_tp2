@@ -4,11 +4,11 @@ import models.*;
 
 public class FrameFactory {
 
-    public static FrameModel createConnexionFrame() {
+    public static FrameModel createConnectionFrame() {
         return new RequestFrameModel(RequestFrameModel.RequestType.OPEN_CONNEXION);
     }
 
-    public static FrameModel createDeconnexionFrame() {
+    public static FrameModel createDisconnectionFrame() {
         return new RequestFrameModel(RequestFrameModel.RequestType.CLOSE_CONNEXION);
     }
 

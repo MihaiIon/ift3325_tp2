@@ -51,13 +51,11 @@ public class Main {
                 System.exit(-1);
             }
 
-            Sender sender = new Sender(hostname, port);
-            sender.sendFile(filePath);
-
+            Sender sender = new Sender(hostname, port, filePath);
         } else {
             System.out.print("Invalid Arguments : " + Arrays.toString(args));
             TestManager.testChecksum();
-//            TestManager.testMessageTransmission(TEST_DATA);
+            TestManager.testMessageTransmission(TEST_DATA);
             TestManager.testErrors();
         }
 

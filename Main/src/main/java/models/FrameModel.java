@@ -1,17 +1,14 @@
 package models;
 
 import factories.BadFrameFactory;
-import factories.FrameFactory;
 import factories.TypeFactory;
 import managers.CheckSumManager;
 import managers.ConversionManager;
 import managers.DataManager;
 
-import static models.TypeModel.Type;
+import static models.FrameTypeModel.FrameType;
 import static models.RequestFrameModel.RequestType.OPEN_CONNEXION;
 import static models.RequestFrameModel.RequestType.CLOSE_CONNEXION;
-
-import java.util.ArrayList;
 
 public class FrameModel {
 
@@ -36,9 +33,9 @@ public class FrameModel {
                 // Checksum is valid
                 if(!CheckSumManager.isFrameContentValid(frameContent)) return false;
                 // Prepare variables
-                String info = TypeFactory.createTypeModel(Type.INFORMATION).toBinary();
-                String rec = TypeFactory.createTypeModel(Type.FRAME_RECEPTION).toBinary();
-                String rej = TypeFactory.createTypeModel(Type.REJECTED_FRAME).toBinary();
+                String info = TypeFactory.createTypeModel(FrameType.INFORMATION).toBinary();
+                String rec = TypeFactory.createTypeModel(FrameTypeModel.FrameType.FRAME_RECEPTION).toBinary();
+                String rej = TypeFactory.createTypeModel(FrameType.REJECTED_FRAME).toBinary();
                 String type = frameContent.substring(0, 8);
 
                 // Check if information frame has valid data (length).
@@ -46,11 +43,11 @@ public class FrameModel {
                 if(type.equals(info) && (dataLength == 0 || dataLength % 8 != 0)) return false;
 
                 // Check if type is valid.
-                Type tm = TypeModel.parseType(type);
-                if(tm == Type.BAD_FRAME) return false;
+                FrameTypeModel.FrameType tm = FrameTypeModel.parseFrameType(type);
+                if(tm == FrameType.BAD_FRAME) return false;
 
                 // Check if id is valid
-                if(tm == Type.INFORMATION || tm == Type.FRAME_RECEPTION|| tm == Type.REJECTED_FRAME) {
+                if(tm == FrameTypeModel.FrameType.INFORMATION || tm == FrameType.FRAME_RECEPTION|| tm == FrameTypeModel.FrameType.REJECTED_FRAME) {
                     ByteModel id = new ByteModel(ConversionManager.convertStringToByte(frameContent.substring(8, 16)));
                     return id.getValue() >= 0 && id.getValue() < 8;
                 }
@@ -68,34 +65,37 @@ public class FrameModel {
      * @return FrameModel Object.
      */
     public static FrameModel convertStreamToFrame(String stream) {
-        // Save lengths
-        int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
-        int gLength = CheckSumManager.generator.length();
-        // Remove stuffed Bits
-        String frameContent = DataManager.removedBitsStuffing(stream.substring(fLength, stream.length() - fLength));
-        int length = frameContent.length();
-        // Parse info
-        Type type = TypeModel.parseType(frameContent.substring(0, 8));
-        byte metadata = ConversionManager.convertStringToByte(frameContent.substring(8, 16));
-        String checkSum = frameContent.substring(length - gLength);
-        // Parse Frame
-        switch (type) {
-            case INFORMATION:
-                String data = frameContent.substring(16, length - gLength);
-                return new InformationFrameModel(metadata, data, checkSum);
-            case CONNECTION_REQUEST:
-                return new RequestFrameModel(OPEN_CONNEXION, checkSum);
-            case FRAME_RECEPTION:
-                return new ReceptionFrameModel(metadata, checkSum);
-            case REJECTED_FRAME:
-                return new RejectionFrameModel(metadata, checkSum);
-            case TERMINATE_CONNECTION_REQUEST:
-                return new RequestFrameModel(CLOSE_CONNEXION, checkSum);
-            case P_BITS:
-                return new PBitFrameModel(metadata, checkSum);
-            default:
-                return BadFrameFactory.createInvalidDataInInformationFrame();
+        if(isFrameValid(stream)) {
+            // Save lengths
+            int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
+            int gLength = CheckSumManager.generator.length();
+            // Remove stuffed Bits
+            String frameContent = DataManager.removedBitsStuffing(stream.substring(fLength, stream.length() - fLength));
+            int length = frameContent.length();
+            // Parse info
+            FrameType frameType = FrameTypeModel.parseFrameType(frameContent.substring(0, 8));
+            byte metadata = ConversionManager.convertStringToByte(frameContent.substring(8, 16));
+            String checkSum = frameContent.substring(length - gLength);
+            // Parse Frame
+            switch (frameType) {
+                case INFORMATION:
+                    String data = frameContent.substring(16, length - gLength);
+                    return new InformationFrameModel(metadata, data, checkSum);
+                case CONNECTION_REQUEST:
+                    return new RequestFrameModel(OPEN_CONNEXION, checkSum);
+                case FRAME_RECEPTION:
+                    return new ReceptionFrameModel(metadata, checkSum);
+                case REJECTED_FRAME:
+                    return new RejectionFrameModel(metadata, checkSum);
+                case TERMINATE_CONNECTION_REQUEST:
+                    return new RequestFrameModel(CLOSE_CONNEXION, checkSum);
+                case P_BITS:
+                    return new PBitFrameModel(metadata, checkSum);
+                default:
+                    break;
+            }
         }
+        return BadFrameFactory.createSimpleBadFrame();
     }
 
     // ------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public class FrameModel {
 
     // Attributes
     private String flag;
-    private TypeModel type;
+    private FrameTypeModel type;
     private ByteModel metadata;
     private String data;
     private String checkSum;
@@ -115,7 +115,7 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(String flag, Type t, ByteModel metadata, String data, String checkSum) {
+    public FrameModel(String flag, FrameType t, ByteModel metadata, String data, String checkSum) {
         this.flag = flag;
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
@@ -129,7 +129,7 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type t, ByteModel metadata, String data) {
+    public FrameModel(FrameType t, ByteModel metadata, String data) {
         this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
@@ -143,7 +143,7 @@ public class FrameModel {
      * @param metadata Frame's metadata.
      * @param data Frame's data.
      */
-    public FrameModel(Type t, ByteModel metadata, String data, String checkSum) {
+    public FrameModel(FrameType t, ByteModel metadata, String data, String checkSum) {
         this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
@@ -156,7 +156,7 @@ public class FrameModel {
      * @param t Frame's metadata.
      * @param metadata Frame's metadata.
      */
-    public FrameModel(Type t, ByteModel metadata) {
+    public FrameModel(FrameTypeModel.FrameType t, ByteModel metadata) {
         this.flag = ConversionManager.convertByteToString(DataManager.FLAG);
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
@@ -192,8 +192,8 @@ public class FrameModel {
     // ------------------------------------------------------------------------
     // Getters
 
-    public Type getType() { return type.getType(); }
-    public TypeModel getTypeModel() { return type; }
+    public FrameTypeModel.FrameType getType() { return type.getType(); }
+    public FrameTypeModel getTypeModel() { return type; }
     public ByteModel getMetadata() { return metadata; }
     public String getData() { return data; }
     public String getCheckSum() { return checkSum; }

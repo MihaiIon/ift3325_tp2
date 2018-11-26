@@ -21,7 +21,7 @@ public class BadFrame extends FrameModel {
         NEGATIVE_REJECTION_FRAME_ID
     }
 
-    public BadFrame(String flag, TypeModel.Type type, ByteModel metadata, String data, String checkSum) {
-        super(flag, type, metadata, data, checkSum);
+    public BadFrame(String flag, FrameTypeModel.FrameType frameType, ByteModel metadata, String data, String checkSum) {
+        super(flag, frameType, metadata, data, checkSum);
     }
 }

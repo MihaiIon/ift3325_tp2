@@ -5,7 +5,7 @@ import managers.DataManager;
 import models.BadFrame;
 import models.ByteModel;
 
-import static models.TypeModel.Type.*;
+import static models.FrameTypeModel.FrameType.*;
 
 public class BadFrameFactory {
 
@@ -44,6 +44,10 @@ public class BadFrameFactory {
             default:
                 return null;
         }
+    }
+
+    public static BadFrame createSimpleBadFrame() {
+        return new BadFrame(flag, BAD_FRAME, new ByteModel(0), "", "-1");
     }
 
     public static BadFrame createNoFlagFrame() {

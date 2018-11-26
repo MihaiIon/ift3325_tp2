@@ -4,122 +4,104 @@ import factories.FrameFactory;
 import managers.DataManager;
 import models.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class Sender extends SocketController {
 
-    private int posToSend = 0;
-    private int highestPosSent = 0;
-
-    private InformationFrameModel[] allFramesToSend;
+    // Attributes
+    private int savedFrameIndex =0;
+    private int currFrameIndex = 0;
+    private int lastFrameIdReceived = -1;
+    private int lastFrameIdSent = -1;
+    private String filepath;
+    private InformationFrameModel[] framesToBeSent;
 
     /**
      * Constructs a sender
      * @param hostname the hostname of the receiver
      * @param port the port of the receiver
      */
-    public Sender(String hostname, int port) {
-        setState(State.Waiting);
-        try
-        {
+    public Sender(String hostname, int port, String filepath) {
+        setState(State.STANDBY);
+        this.filepath = filepath;
+        try {
             Socket socket = new Socket(hostname, port);
             System.out.println("Connected");
             // sends output to the socket
             configureSocket(socket);
-        } catch(IOException e)
-        {
+            // Starts the operation of sending frames through the socket.
+            sendConnectionFrame();
+        } catch(IOException e) {
             e.printStackTrace();
         }
     }
 
-    /*
-     *   https://www.journaldev.com/709/java-read-file-line-by-line
-     *   Lit un fichier ligne par ligne et les envoie
-     *   @param filepath le path du fichier
+    // ----------------------------------------------------------------------------------
+    // Methods
+
+    /**
+     *
      */
-    private void readFile(String filepath) {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(filepath));
-            String line = null;
-            StringBuilder sb = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            allFramesToSend = DataManager.splitMessageIntoFrames(sb.toString());
-        } catch (IOException e) {
-            System.out.println("Reader could not open : " + filepath);
-            e.printStackTrace();
-            System.exit(-1);
-        }
+    private void sendConnectionFrame() {
+        sendFrame(FrameFactory.createConnectionFrame());
     }
 
     /**
-     * Starts the operation of sending an entire file throught the socket
-     * @param filepath the path of the file to send
+     *
      */
-    public void sendFile(String filepath) {
-        readFile(filepath);
-        openConnection();
+    private void sendPBitFrame() {
+        sendFrame(FrameFactory.pBitFrame(lastFrameIdSent));
     }
-
-    private void openConnection() {
-
-        sendFrame(FrameFactory.createConnexionFrame());
-    }
-
 
     /**
      * Envoie les frames suivantes sil en reste a envoyer ou une demande de déconnection sinon
      */
-    private void sendNextFrames() {
-        System.out.println("Sending next frames : " + posToSend);
+    private void sendNextFrame() {
+        // Saved current position.
+        savedFrameIndex = currFrameIndex;
+        do {
+            // Retrieve next frame.
+            FrameModel frame = getNextFrame();
+            currFrameIndex++;
 
-        //Verifie que lon na pas deja envoyé toutes les frames
-        if(posToSend + 1 >= allFramesToSend.length) {
-            sendFrame(FrameFactory.createDeconnexionFrame());
-        } else {
-            //On peut envoyer des frames
-            int framePosition = posToSend;
-            do  {
-                System.out.println("Sending frame at position : " + framePosition);
-                InformationFrameModel frame = allFramesToSend[framePosition];
-                highestPosSent = framePosition;
-                sendFrame(frame);
-            } while (++framePosition % 8 != posToSend % 8 && framePosition < allFramesToSend.length);
-        }
+            // Close connection if all frames were sent.
+            if(frame == null) {
+                sendFrame(FrameFactory.createDisconnectionFrame());
+                setState(State.CONNECTION_CLOSED);
+                return;
+            }
+
+            // Send next frame.
+            lastFrameIdSent = ((InformationFrameModel) frame).getId();
+            System.out.println(
+                    "Sending next frame " + currFrameIndex + "/" + framesToBeSent.length
+                            + " | id : " + lastFrameIdSent + "."
+            );
+            sendFrame(frame);
+        } while ((lastFrameIdSent - lastFrameIdReceived) <  8);
     }
 
-    private void confirmFrames(int to) {
-        while (posToSend++ % 8 != to % 8);
-    }
+    // ----------------------------------------------------------------------------------
+    // Handlers
 
     @Override
-    public void frameReceived(FrameModel frame) {
-        super.frameReceived(frame);
+    public boolean onFrameReceived(FrameModel frame) {
+        super.onFrameReceived(frame);
+        switch (getState()) {
+            case STANDBY:
+                return handleOnStandbyState(frame);
+            case CONNECTION_OPENED:
+                return handleOnConnectionOpenedState(frame);
+            default:
+                logWrongRequestType("None, receiver status is closed", frame.getType().toString());
+                return false;
+        }
+    }
 //
 //            switch (getState()) {
-//                case Waiting: {
-//                    if(frameModel.hasErrors()) {
-//                        openConnection();
-//                    } else {
-//                        switch (frameModel.getType()) {
-//                            case CONNECTION_REQUEST: {
-//                                setState(State.Open);
-//                                sendNextFrames();
-//                                return;
-//                            }
-//                            default: {
-//                                logWrongRequestType("Connection request", frameModel.getType().toString());
-//                            }
-//                        }
-//                    }
-//                    break;
-//                }
-//                case Open: {
+
+//                case CONNECTION_OPENED: {
 //                    if(!frameModel.hasErrors()) {
 //                        switch (frameModel.getType()) {
 //                            case FRAME_RECEPTION: {
@@ -128,7 +110,7 @@ public class Sender extends SocketController {
 //
 //                                //Only send next frames if all previous received frames were analysed
 //                                if (i == framesReceived.size() - 1) {
-//                                    sendNextFrames();
+//                                    sendNextFrame();
 //                                    return;
 //                                }
 //                                break;
@@ -137,7 +119,7 @@ public class Sender extends SocketController {
 //                                RejectionFrameModel rejectionFrameModel = (RejectionFrameModel) frameModel;
 //                                int confirmedPosition = prevPosN(rejectionFrameModel.getRejectedFrameId());
 //                                confirmFrames(confirmedPosition);
-//                                sendNextFrames();
+//                                sendNextFrame();
 //                                return;
 //                            }
 //                            default: {
@@ -157,20 +139,66 @@ public class Sender extends SocketController {
 //                }
 //            }
 //        }
+
+
+    /**
+     * @param frame Received frame.
+     * @return True if all went good.
+     */
+    @Override
+    boolean handleOnStandbyState(FrameModel frame) {
+        switch (frame.getType()) {
+            case CONNECTION_REQUEST:
+                setState(State.CONNECTION_OPENED);
+                framesToBeSent = DataManager.readFile(filepath);
+                sendNextFrame();
+                break;
+            default:
+                sendConnectionFrame();
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param frame Received frame.
+     * @return True if all went good.
+     */
+    @Override
+    boolean handleOnConnectionOpenedState(FrameModel frame) {
+        switch (frame.getType()) {
+            case REJECTED_FRAME:
+                break;
+            case FRAME_RECEPTION:
+                savedFrameIndex = currFrameIndex;
+                break;
+            default:
+                return false;
+        }
+        return true;
     }
 
     @Override
-    public void timeOutReached(int position) {
+    public void onTimeOutReached(int position) {
         switch (getState()) {
-            case Open: {
-                FrameModel frameModel = FrameFactory.pBitFrame(posToSend % 8);
-                sendFrame(frameModel);
+            case CONNECTION_OPENED: {
+                sendPBitFrame();
                 break;
             }
-            case Waiting: {
-                openConnection();
+            case STANDBY: {
+                sendConnectionFrame();
                 break;
             }
         }
+    }
+
+    // ----------------------------------------------------------------------------------
+    // Getters
+
+    private FrameModel getNextFrame() {
+        if(currFrameIndex < framesToBeSent.length) {
+            return framesToBeSent[currFrameIndex];
+        }
+        return null;
     }
 }

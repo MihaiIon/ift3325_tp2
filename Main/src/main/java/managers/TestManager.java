@@ -7,7 +7,7 @@ import factories.BadFrameFactory;
 import models.BadFrame;
 import models.FrameModel;
 import models.FrameWindowModel;
-import models.TypeModel;
+import models.FrameTypeModel;
 
 import java.util.ArrayList;
 
@@ -44,7 +44,7 @@ public class TestManager {
             // Parse binary data
             System.out.println("== Frame Created ==");
             receivedFrame = FrameModel.convertStreamToFrame(frame.toBinary());
-            if (receivedFrame.getType() != TypeModel.Type.BAD_FRAME) {
+            if (receivedFrame.getType() != FrameTypeModel.FrameType.BAD_FRAME) {
                 if(window.addFrame(receivedFrame)){
                     System.out.println(receivedFrame);
                 }

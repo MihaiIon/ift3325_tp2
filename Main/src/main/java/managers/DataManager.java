@@ -5,6 +5,9 @@ import models.FrameModel;
 import models.FrameWindowModel;
 import models.InformationFrameModel;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class DataManager {
@@ -63,6 +66,28 @@ public class DataManager {
             }
         }
         return message.toString();
+    }
+
+    /*
+     *   https://www.journaldev.com/709/java-read-file-line-by-line
+     *   Lit un fichier ligne par ligne et les envoie
+     *   @param filepath le path du fichier
+     */
+    public static InformationFrameModel[] readFile(String filepath) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filepath));
+            String line = null;
+            StringBuilder sb = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            return splitMessageIntoFrames(sb.toString());
+        } catch (IOException e) {
+            System.out.println("Reader could not open : " + filepath);
+            e.printStackTrace();
+            System.exit(-1);
+            return null;
+        }
     }
 
     // --------------------------------------------------------------------

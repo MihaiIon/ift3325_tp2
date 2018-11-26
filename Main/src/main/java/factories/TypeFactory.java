@@ -1,30 +1,28 @@
 package factories;
 
-import models.TypeModel;
-import static models.TypeModel.Type;
-import static models.TypeModel.Type.BAD_FRAME;
+import models.FrameTypeModel;
 
 public class TypeFactory {
 
     /**
-     * Provides a TypeModel corresponding to the provided <type>.
+     * Provides a FrameTypeModel corresponding to the provided <frameType>.
      */
-    public static TypeModel createTypeModel(Type type) {
-        switch (type) {
+    public static FrameTypeModel createTypeModel(FrameTypeModel.FrameType frameType) {
+        switch (frameType) {
             case INFORMATION:
-                return new TypeModel(type, 'I');
+                return new FrameTypeModel(frameType, 'I');
             case CONNECTION_REQUEST:
-                return new TypeModel(type, 'C');
+                return new FrameTypeModel(frameType, 'C');
             case FRAME_RECEPTION:
-                return new TypeModel(type, 'A');
+                return new FrameTypeModel(frameType, 'A');
             case REJECTED_FRAME:
-                return new TypeModel(type, 'R');
+                return new FrameTypeModel(frameType, 'R');
             case TERMINATE_CONNECTION_REQUEST:
-                return new TypeModel(type, 'F');
+                return new FrameTypeModel(frameType, 'F');
             case P_BITS:
-                return new TypeModel(type, 'P');
+                return new FrameTypeModel(frameType, 'P');
             default:
-                return new TypeModel(type, 'X');
+                return new FrameTypeModel(frameType, 'X');
         }
     }
 }

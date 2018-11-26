@@ -1,7 +1,5 @@
 package models;
 
-import managers.ConversionManager;
-
 public class PBitFrameModel extends FrameModel {
 
     /**
@@ -9,7 +7,7 @@ public class PBitFrameModel extends FrameModel {
      * @param bitLength Identifier of the received Frame.
      */
     public PBitFrameModel(int bitLength) {
-        super(TypeModel.Type.P_BITS, new ByteModel(bitLength));
+        super(FrameTypeModel.FrameType.P_BITS, new ByteModel(bitLength));
     }
 
     /**
@@ -18,7 +16,7 @@ public class PBitFrameModel extends FrameModel {
      * @param checksum Frame's checkSum.
      */
     public PBitFrameModel(int receivedFrameId, String checksum) {
-        super(TypeModel.Type.P_BITS, new ByteModel(receivedFrameId), "", checksum);
+        super(FrameTypeModel.FrameType.P_BITS, new ByteModel(receivedFrameId), "", checksum);
     }
 
     // ------------------------------------------------------------------------

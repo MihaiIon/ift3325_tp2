@@ -24,19 +24,20 @@ public abstract class SocketController {
 
     private AtomicInteger frameNumber = new AtomicInteger();
 
-    public void frameReceived(FrameModel frame) {
+    public boolean onFrameReceived(FrameModel frame) {
         frameNumber.incrementAndGet();
+        return true;
     };
 
-    public abstract void timeOutReached(int position);
+    public abstract void onTimeOutReached(int position);
+    abstract boolean handleOnStandbyState(FrameModel frame);
+    abstract boolean handleOnConnectionOpenedState(FrameModel frame);
 
     private State state;
 
     //The possible statuses for a socket
     protected enum State {
-        Waiting,
-        Open,
-        Closed;
+        STANDBY, CONNECTION_OPENED, CONNECTION_CLOSED
     }
     /**
      * Do the initial configuration of the socket being controlled
@@ -48,13 +49,13 @@ public abstract class SocketController {
 
         socketMonitor = new SocketMonitorThread(socket);
 
-        compositeDisposable.add(socketMonitor.getReceivedPacketsObservable()
+        compositeDisposable.add(socketMonitor.getReceivedFrameObservable()
                 .observeOn(Schedulers.trampoline())
-                .subscribe(this::frameReceived));
+                .subscribe(this::onFrameReceived));
 
         compositeDisposable.add(timeOutPublisher
                 .observeOn(Schedulers.trampoline())
-                .subscribe(this::timeOutReached));
+                .subscribe(this::onTimeOutReached));
 
         socketMonitor.start();
     }
@@ -62,7 +63,7 @@ public abstract class SocketController {
     /**
      * Close all the remaining resources for the current socket controller
      */
-    public void close() {
+    public void closeServer() {
         if(out != null) {
             try {
                 out.close();

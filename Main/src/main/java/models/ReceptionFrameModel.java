@@ -1,7 +1,5 @@
 package models;
 
-import managers.ConversionManager;
-
 public class ReceptionFrameModel extends FrameModel {
 
     /**
@@ -9,7 +7,7 @@ public class ReceptionFrameModel extends FrameModel {
      * @param receivedFrameId Identifier of the received Frame.
      */
     public ReceptionFrameModel(int receivedFrameId) {
-        super(TypeModel.Type.FRAME_RECEPTION, new ByteModel(receivedFrameId));
+        super(FrameTypeModel.FrameType.FRAME_RECEPTION, new ByteModel(receivedFrameId));
     }
 
     /**
@@ -18,7 +16,7 @@ public class ReceptionFrameModel extends FrameModel {
      * @param checksum Frame's checkSum.
      */
     public ReceptionFrameModel(int receivedFrameId, String checksum) {
-        super(TypeModel.Type.FRAME_RECEPTION, new ByteModel(receivedFrameId), "", checksum);
+        super(FrameTypeModel.FrameType.FRAME_RECEPTION, new ByteModel(receivedFrameId), "", checksum);
     }
 
     // ------------------------------------------------------------------------
