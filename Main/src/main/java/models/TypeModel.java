@@ -22,7 +22,7 @@ public class TypeModel {
      * Provides the Type represented by the provided stream of bits.
      * @param byteStream Stream of bits
      */
-    static Type parseType (String byteStream) {
+    public static Type parseType (String byteStream) {
         byte type = ConversionManager.convertStringToByte(byteStream);
         switch (type) {
             case (byte)'I':
@@ -41,7 +41,7 @@ public class TypeModel {
                 return Type.BAD_FRAME;
         }
     }
-    
+
     // ------------------------------------------------------------------------
     // Constructor
 

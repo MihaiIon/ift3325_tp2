@@ -47,8 +47,14 @@ public class ConversionManager {
      * @return Provides a byte representing the stream of bits.
      */
     public static byte convertStringToByte(String stream) {
-        if(stream.length() == 8) return Byte.parseByte(stream, 2);
-        return 0;
+        if(stream.length() == 8) {
+            try {
+                return Byte.parseByte(stream, 2);
+            } catch(NumberFormatException e) {
+                return Byte.MAX_VALUE;
+            }
+        }
+        return Byte.MAX_VALUE;
     }
 
     /**
@@ -60,7 +66,11 @@ public class ConversionManager {
             int length = stream.length() / 8;
             byte[] bytes = new byte[length];
             for (int i = 0; i < length; i++) {
-                bytes[i] = convertStringToByte(stream.substring(i * 8, (i+1) * 8));
+                try {
+                    bytes[i] = convertStringToByte(stream.substring(i * 8, (i+1) * 8));
+                } catch (NumberFormatException e) {
+                    bytes[i] = Byte.MAX_VALUE;
+                }
             }
             return bytes;
         }

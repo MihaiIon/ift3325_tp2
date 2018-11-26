@@ -25,8 +25,10 @@ public class BadFrameFactory {
                 return createInvalidTypeFrame();
             case INVALID_FRAME_LENGTH:
                 return createInvalidFrameLengthFrame();
-            case NO_DATA_INTO_INFORMATION_FRAME:
-                return createNoDataIntoInformationFrame();
+            case NO_DATA_IN_INFORMATION_FRAME:
+                return createNoDataInInformationFrame();
+            case INVALID_DATA_IN_INFORMATION_FRAME:
+                return createInvalidDataInInformationFrame();
             case INFORMATION_FRAME_ID_OUT_OF_RANGE:
                 return createInvalidInformationFrame(8);
             case RECEPTION_FRAME_ID_OUT_OF_RANGE:
@@ -45,34 +47,38 @@ public class BadFrameFactory {
     }
 
     public static BadFrame createNoFlagFrame() {
-        return new BadFrame("", BAD_FRAME, new ByteModel(0), flag+flag+flag+flag, flag);
+        return new BadFrame("", BAD_FRAME, new ByteModel(0), flag+flag+flag+flag, "-1");
     }
 
     public static BadFrame createInvalidFlagFrame() {
-        return new BadFrame("01100110", BAD_FRAME, new ByteModel(0), "", flag);
+        return new BadFrame("01100110", BAD_FRAME, new ByteModel(0), "", "-1");
     }
 
     public static BadFrame createInvalidTypeFrame() {
-        return new BadFrame(flag, BAD_FRAME, new ByteModel(0), "", flag);
+        return new BadFrame(flag, BAD_FRAME, new ByteModel(0), "", "-1");
     }
 
     public static BadFrame createInvalidFrameLengthFrame() {
-        return new BadFrame("", BAD_FRAME, new ByteModel(0), "", "");
+        return new BadFrame(flag, BAD_FRAME, new ByteModel(0), "", "");
     }
 
-    public static BadFrame createNoDataIntoInformationFrame(){
-        return new BadFrame(flag, INFORMATION, new ByteModel(0), "", flag);
+    public static BadFrame createNoDataInInformationFrame(){
+        return new BadFrame(flag, INFORMATION, new ByteModel(0), "", "-1");
+    }
+
+    public static BadFrame createInvalidDataInInformationFrame(){
+        return new BadFrame(flag, INFORMATION, new ByteModel(0), "001", "-1");
     }
 
     public static BadFrame createInvalidInformationFrame(int id) {
-        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, flag);
+        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, "-1");
     }
 
     public static BadFrame createInvalidReceptionFrame(int id) {
-        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, flag);
+        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, "-1");
     }
 
     public static BadFrame createInvalidRejectionFrame(int id) {
-        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, flag);
+        return new BadFrame(flag, INFORMATION, new ByteModel(id), flag, "-1");
     }
 }

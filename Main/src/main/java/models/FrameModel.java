@@ -32,7 +32,28 @@ public class FrameModel {
             // Starts and ends with a Flag.
             if(flag.equals(start) && flag.equals(end)){
                 String frameContent = DataManager.removedBitsStuffing(stream.substring(fLength, length - fLength));
-                return CheckSumManager.isFrameContentValid(frameContent);
+                // Checksum is valid
+                if(!CheckSumManager.isFrameContentValid(frameContent)) return false;
+                // Prepare variables
+                String info = TypeFactory.createTypeModel(Type.INFORMATION).toBinary();
+                String rec = TypeFactory.createTypeModel(Type.FRAME_RECEPTION).toBinary();
+                String rej = TypeFactory.createTypeModel(Type.REJECTED_FRAME).toBinary();
+                String type = frameContent.substring(0, 8);
+
+                // Check if information frame has valid data (length).
+                int dataLength = frameContent.length() - 16 - gLength;
+                if(type.equals(info) && (dataLength == 0 || dataLength % 8 != 0)) return false;
+
+                // Check if type is valid.
+                Type tm = TypeModel.parseType(type);
+                if(tm == Type.BAD_FRAME) return false;
+
+                // Check if id is valid
+                if(tm == Type.INFORMATION || tm == Type.FRAME_RECEPTION|| tm == Type.REJECTED_FRAME) {
+                    ByteModel id = new ByteModel(ConversionManager.convertStringToByte(frameContent.substring(8, 16)));
+                    return id.getValue() >= 0 && id.getValue() < 8;
+                }
+                return true;
             }
         }
         return false;
@@ -76,82 +97,6 @@ public class FrameModel {
         }
     }
 
-    /**
-     * Converts a the provided binary data to a list of FrameModel Object.
-     * @param stream Stream of bits representing one or more Frames.
-     */
-    public static ArrayList<FrameModel> convertStreamToFrames(final String stream) {
-        // Convert to iynary string.
-        String binaryFlag = ConversionManager.convertByteToString(DataManager.FLAG);
-        // Frames parsed.
-        ArrayList<FrameModel> frames = new ArrayList<>();
-        // True if we've found the first flag of a frame.
-        boolean startFlagfound = false; 
-        // True if we matched a flag. 
-        boolean match = false;
-        // Saved position of the start of a frame.
-        int saved = 0;
-
-        String localStream = stream;
-
-        while(localStream != null && localStream.length() > 0) {
-            int startPos = localStream.indexOf(binaryFlag);
-
-            //Si on ne trouve pas le flag ou sil se trouve a la fin du stream
-            if(startPos < 0 || startPos > localStream.length() - binaryFlag.length()) break;
-
-            //On trouve la position de la fin du steam
-            int endPos = localStream.indexOf(binaryFlag, startPos + 1);
-
-            //Si on ne trouve pas de fin on quitte la bouble
-            if(endPos < 0) break;
-
-            String frameStream = localStream.substring(startPos, endPos + binaryFlag.length());
-
-            try {
-                frames.add(FrameModel.convertStreamToFrame(frameStream));
-            } catch (Exception e) {
-                frames.add(FrameFactory.createInvalidFrame(frameStream));
-            }
-            localStream = localStream.substring(endPos + binaryFlag.length());
-        }
-
-        /*TODO
-        for(int i = 0; i < stream.length(); i++) {
-            if (stream.charAt(i) == binaryFlag.charAt(0)) {
-
-                // Match the flag.                
-                match = true;
-                for(int j = 1; i+j <stream.length() && j < binaryFlag.length(); j++) {
-                    if(stream.charAt(i+j) != binaryFlag.charAt(j)) {
-                        match = false;
-                        break;
-                    }
-                }
-
-                // We've found the start flag.
-                if (match && !startFlagfound) {
-                    startFlagfound = true;
-                }
-
-                // We've found the end flag.
-                else if (match && startFlagfound) {
-                    startFlagfound = false;
-                    // Extract Frame.
-                    i = i+binaryFlag.length();
-                    frames.add(FrameModel.convertStreamToFrame(stream.substring(saved, i)));
-                    saved = i;
-                }
-
-                // Reset
-                match = false;
-            }
-        }*/
-
-
-        return frames;
-    }
-
     // ------------------------------------------------------------------------
     // Frame Model
 
@@ -174,7 +119,7 @@ public class FrameModel {
         this.type = TypeFactory.createTypeModel(t);
         this.metadata = metadata;
         this.data = data;
-        this.checkSum = checkSum;
+        this.checkSum = checkSum.equals("-1") ? CheckSumManager.computeCheckSum(type.toBinary(), metadata.toBinary(), data) : checkSum;
     }
 
     /**

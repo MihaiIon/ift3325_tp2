@@ -1,5 +1,10 @@
 package managers;
 
+import static org.fusesource.jansi.Ansi.*;
+import static org.fusesource.jansi.Ansi.Color.*;
+
+import factories.BadFrameFactory;
+import models.BadFrame;
 import models.FrameModel;
 import models.FrameWindowModel;
 
@@ -8,9 +13,9 @@ import java.util.ArrayList;
 public class TestManager {
 
     public static void testMessageTransmission(String message) {
-        System.out.println("\n\n\n\n\n==================================================================");
-        System.out.println("\tTesting Transmission");
-        System.out.println("==================================================================");
+        System.out.println(ansi().fg(BLUE).a("\n\n\n=================================================================="));
+        System.out.println(ansi().fg(BLUE).a("\tTesting Transmission"));
+        System.out.println(ansi().fg(BLUE).a("=================================================================="));
 
         // Message
         System.out.println("\n***** Encoding message ****");
@@ -60,9 +65,9 @@ public class TestManager {
     }
 
     public static void testChecksum() {
-        System.out.println("\n\n\n\n\n==================================================================");
-        System.out.println("\tTesting CheckSumManager.computeCheckSum()");
-        System.out.println("==================================================================");
+        System.out.println(ansi().fg(BLUE).a("\n\n\n==================================================================").reset());
+        System.out.println(ansi().fg(BLUE).a("\tTesting CheckSumManager.computeCheckSum()").reset());
+        System.out.println(ansi().fg(BLUE).a("==================================================================").reset());
 
         // Test 1
         String stream = "1000100000010001";
@@ -87,6 +92,21 @@ public class TestManager {
     }
 
     public static void testErrors() {
+        System.out.println(ansi().fg(BLUE).a("\n\n\n==================================================================").reset());
+        System.out.println(ansi().fg(BLUE).a("\tTesting Errors : Is Valid?").reset());
+        System.out.println(ansi().fg(BLUE).a("==================================================================").reset());
 
+        int i = 0;
+        StringBuilder sb = new StringBuilder();
+        FrameModel badFrame;
+        for (BadFrame.BadFrameType type : BadFrame.BadFrameType.values()) {
+            badFrame = BadFrameFactory.createBadFrame(type);
+            sb.append("\n\nTest Case ").append(i).append(" ").append(type).append(".");
+            sb.append("\nInput : ").append(badFrame.toBinary());
+            sb.append("\nExpected : false");
+            sb.append("\nComputed : ").append(FrameModel.isFrameValid(badFrame.toBinary()));
+            i++;
+        }
+        System.out.println(sb.toString());
     }
 }

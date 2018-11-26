@@ -2,6 +2,7 @@ import managers.TestManager;
 import networking.Receiver;
 import networking.Sender;
 import utils.StringUtils;
+import org.fusesource.jansi.AnsiConsole;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -24,6 +25,9 @@ public class Main {
      * @throws IOException
      */
     public static void main(String args[]) throws IOException {
+
+        // Install ansi into console.
+        AnsiConsole.systemInstall();
 
         System.setProperty( "sun.security.ssl.allowUnsafeRenegotiation", "true" );
         //Vérifie si les arguments du programme correspondent à ceux nécessaire pour partir un receveur
@@ -52,9 +56,12 @@ public class Main {
 
         } else {
             System.out.print("Invalid Arguments : " + Arrays.toString(args));
-//            TestManager.testChecksum();
+            TestManager.testChecksum();
 //            TestManager.testMessageTransmission(TEST_DATA);
             TestManager.testErrors();
         }
+
+        // Uninstall ansi into console.
+        AnsiConsole.systemUninstall();
     }
 }
