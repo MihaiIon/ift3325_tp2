@@ -1,5 +1,6 @@
 package models;
 
+import factories.BadFrameFactory;
 import factories.FrameFactory;
 import factories.TypeFactory;
 import managers.CheckSumManager;
@@ -66,7 +67,7 @@ public class FrameModel {
      * @param stream Stream of bits representing the Frame.
      * @return FrameModel Object.
      */
-    public static FrameModel convertStreamToFrame(String stream) throws Exception{
+    public static FrameModel convertStreamToFrame(String stream) {
         // Save lengths
         int fLength = ConversionManager.convertByteToString(DataManager.FLAG).length();
         int gLength = CheckSumManager.generator.length();
@@ -93,7 +94,7 @@ public class FrameModel {
             case P_BITS:
                 return new PBitFrameModel(metadata, checkSum);
             default:
-                return null;
+                return BadFrameFactory.createInvalidDataInInformationFrame();
         }
     }
 
@@ -165,10 +166,6 @@ public class FrameModel {
 
     // ------------------------------------------------------------------------
     // Methods
-
-    public boolean hasErrors() {
-        return !CheckSumManager.isFrameContentValid(getFrameContent());
-    }
 
     /**
      * Converts FrameModel object to binary number (String representation).

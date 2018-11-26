@@ -30,85 +30,85 @@ public class Receiver extends SocketController {
     }
 
     public void packetsReceived(ArrayList<FrameModel> packetModels) {
-        super.packetsReceived(packetModels);
-        for (int i = 0, packetModelsSize = packetModels.size(); i < packetModelsSize; i++) {
-            FrameModel frame = packetModels.get(i);
-            switch (getState()) {
-                case Waiting: {
-                    if(!frame.hasErrors()) {
-                        if (frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
-                            setState(State.Open);
-                            sendFrame(FrameFactory.createConnexionFrame());
-                            frameWindowModels.add(new FrameWindowModel());
-                        } else {
-                            logWrongRequestType("Connection request", frame.getType().toString());
-                        }
-                    }
-                    return;
-                }
-                case Open: {
-                    if(!frame.hasErrors()) {
-                        switch (frame.getType()) {
-                            case TERMINATE_CONNECTION_REQUEST: {
-                                setState(State.Closed);
-                                printReceivedMessage();
-                                close();
-                                return;
-                            }
-                            case INFORMATION: {
-                                InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
-
-                                if (getLatestFrameWindow().isFull()) {
-                                    frameWindowModels.add(new FrameWindowModel());
-                                }
-
-                                //Verifie si lindex de linformation recue est bon
-                                if (getLatestFrameWindow().addFrame(informationFrameModel)) {
-                                    //Pour repondre uniquement si cest la derniere frame dinformation recue de la batch
-                                    if (i == packetModelsSize - 1) {
-                                        FrameModel frameModel = FrameFactory.createReceptionFrame(informationFrameModel.getId());
-                                        sendFrame(frameModel);
-                                    }
-                                } else {
-                                    //Lindex nest pas bon alors on rejette la frame
-                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
-                                    sendFrame(frameModel);
-                                    return;
-                                }
-                                printReceivedMessage();
-                                break; // TODO
-                            }
-                            case P_BITS: {
-                                PBitFrameModel frameModel = (PBitFrameModel) frame;
-                                int pos = getLatestFrameWindow().getPosition();
-                                sendFrame(FrameFactory.createReceptionFrame(pos));
-                                return;
-                            }
-                            case CONNECTION_REQUEST: {
-                                //Il est possible que lémetteur est ouvert la connexion mais quil nait pas recu la coufirmation
-                                //et quil réessaie douvrir la connexion
-                                sendFrame(FrameFactory.createConnexionFrame());
-                                return;
-                            }
-                            default: {
-                                logWrongRequestType("terminate, information, connection request or pbit", frame.getType().toString());
-                            }
-                        }
-                    } else {
-                        //La frame a une erreur alors on la rejette
-                        FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
-                        sendFrame(frameModel);
-                        return;
-                    }
-
-                    break;
-                }
-                case Closed: {
-                    logWrongRequestType("None, receiver status is closed", frame.getType().toString());
-                    break;
-                }
-            }
-        }
+//        super.packetsReceived(packetModels);
+//        for (int i = 0, packetModelsSize = packetModels.size(); i < packetModelsSize; i++) {
+//            FrameModel frame = packetModels.get(i);
+//            switch (getState()) {
+//                case Waiting: {
+//                    if(!frame.hasErrors()) {
+//                        if (frame.getType() == TypeModel.Type.CONNECTION_REQUEST) {
+//                            setState(State.Open);
+//                            sendFrame(FrameFactory.createConnexionFrame());
+//                            frameWindowModels.add(new FrameWindowModel());
+//                        } else {
+//                            logWrongRequestType("Connection request", frame.getType().toString());
+//                        }
+//                    }
+//                    return;
+//                }
+//                case Open: {
+//                    if(!frame.hasErrors()) {
+//                        switch (frame.getType()) {
+//                            case TERMINATE_CONNECTION_REQUEST: {
+//                                setState(State.Closed);
+//                                printReceivedMessage();
+//                                close();
+//                                return;
+//                            }
+//                            case INFORMATION: {
+//                                InformationFrameModel informationFrameModel = (InformationFrameModel) frame;
+//
+//                                if (getLatestFrameWindow().isFull()) {
+//                                    frameWindowModels.add(new FrameWindowModel());
+//                                }
+//
+//                                //Verifie si lindex de linformation recue est bon
+//                                if (getLatestFrameWindow().addFrame(informationFrameModel)) {
+//                                    //Pour repondre uniquement si cest la derniere frame dinformation recue de la batch
+//                                    if (i == packetModelsSize - 1) {
+//                                        FrameModel frameModel = FrameFactory.createReceptionFrame(informationFrameModel.getId());
+//                                        sendFrame(frameModel);
+//                                    }
+//                                } else {
+//                                    //Lindex nest pas bon alors on rejette la frame
+//                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
+//                                    sendFrame(frameModel);
+//                                    return;
+//                                }
+//                                printReceivedMessage();
+//                                break; // TODO
+//                            }
+//                            case P_BITS: {
+//                                PBitFrameModel frameModel = (PBitFrameModel) frame;
+//                                int pos = getLatestFrameWindow().getPosition();
+//                                sendFrame(FrameFactory.createReceptionFrame(pos));
+//                                return;
+//                            }
+//                            case CONNECTION_REQUEST: {
+//                                //Il est possible que lémetteur est ouvert la connexion mais quil nait pas recu la coufirmation
+//                                //et quil réessaie douvrir la connexion
+//                                sendFrame(FrameFactory.createConnexionFrame());
+//                                return;
+//                            }
+//                            default: {
+//                                logWrongRequestType("terminate, information, connection request or pbit", frame.getType().toString());
+//                            }
+//                        }
+//                    } else {
+//                        //La frame a une erreur alors on la rejette
+//                        FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
+//                        sendFrame(frameModel);
+//                        return;
+//                    }
+//
+//                    break;
+//                }
+//                case Closed: {
+//                    logWrongRequestType("None, receiver status is closed", frame.getType().toString());
+//                    break;
+//                }
+//            }
+//        }
     }
 
 

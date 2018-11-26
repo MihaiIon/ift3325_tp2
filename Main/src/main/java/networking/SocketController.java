@@ -24,7 +24,7 @@ public abstract class SocketController {
 
     private AtomicInteger frameNumber = new AtomicInteger();
 
-    public void frameReceived(ArrayList<FrameModel> packetsReceived) {
+    public void frameReceived(FrameModel frame) {
         frameNumber.incrementAndGet();
     };
 

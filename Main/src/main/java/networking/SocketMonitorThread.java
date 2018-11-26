@@ -21,7 +21,7 @@ public class SocketMonitorThread extends Thread {
 
     private DataInputStream in;
 
-    private PublishSubject<ArrayList<FrameModel>> packetsPublisher;
+    private PublishSubject<FrameModel> packetsPublisher;
 
     /**
      * Construit un moniteur de socket qui surveille les frames recues
@@ -40,13 +40,15 @@ public class SocketMonitorThread extends Thread {
     public void run() {
         try {
             while (true) { //TODO ajouter condition?
-                String input = in.readUTF();
-                System.out.println("Received " + input);
-                ArrayList<FrameModel> receivedFrame = null;
-                System.out.println("---Received frames : ");
-                receivedFrame.forEach(System.out::println);
-                System.out.println("---Received frames end ");
-                packetsPublisher.onNext(receivedFrame);
+                String stream = in.readUTF();
+                System.out.println("Received " + stream);
+                if (FrameModel.isFrameValid(stream)) {
+                    FrameModel receivedFrame = FrameModel.convertStreamToFrame(stream);
+                    System.out.println("---Received frame : ");
+                    System.out.println(receivedFrame);
+                    System.out.println("---Received frame end ");
+                    packetsPublisher.onNext(receivedFrame);
+                }
             }
         } catch (IOException e) {
             System.out.println("Socket closed");
@@ -56,7 +58,7 @@ public class SocketMonitorThread extends Thread {
     /*
      * Retourne le observable de packets recues
      */
-    Observable<ArrayList<FrameModel>> getReceivedPacketsObservable() {
+    Observable<FrameModel> getReceivedPacketsObservable() {
         return packetsPublisher;
     }
 }
