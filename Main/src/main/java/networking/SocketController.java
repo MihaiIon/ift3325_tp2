@@ -24,7 +24,7 @@ public abstract class SocketController {
 
     private AtomicInteger frameNumber = new AtomicInteger();
 
-    public void packetsReceived(ArrayList<FrameModel> packetsReceived) {
+    public void frameReceived(ArrayList<FrameModel> packetsReceived) {
         frameNumber.incrementAndGet();
     };
 
@@ -50,7 +50,7 @@ public abstract class SocketController {
 
         compositeDisposable.add(socketMonitor.getReceivedPacketsObservable()
                 .observeOn(Schedulers.trampoline())
-                .subscribe(this::packetsReceived));
+                .subscribe(this::frameReceived));
 
         compositeDisposable.add(timeOutPublisher
                 .observeOn(Schedulers.trampoline())
@@ -81,7 +81,7 @@ public abstract class SocketController {
      * Sends a frame throught a socket
      * @param frame the frame to send throught the socket
      */
-    void sendFrame(FrameModel frame) {
+    boolean sendFrame(FrameModel frame) {
         try {
             System.out.println("Sending : \n" + frame);
             String output = BitFlipper.flipRandomBits(frame.toBinary());
@@ -89,35 +89,21 @@ public abstract class SocketController {
             out.flush();
         } catch (Exception e) {
             System.out.println("Error sending data :");
-            e.printStackTrace();
-            System.exit(-1);
+            return false;
         }
         addTimeOut();
+        return true;
     }
     /**
      * Envoie une série de frame en un seul coup
      * @param frameModels the frames to send throught the socket
      */
     void sendFrames(ArrayList<FrameModel> frameModels) {
-        StringBuilder sb = new StringBuilder();
         System.out.println("---Batch sending :");
-        frameModels.forEach(frameModel -> {
-            sb.append(frameModel.toBinary());
-            System.out.println(frameModel);
-            System.out.println(frameModel.getFrameContent());
-        });
-        System.out.println("---Batch sending end");
-
-        try {
-            String output = BitFlipper.flipRandomBits(sb.toString());
-            out.writeUTF(output);
-            out.flush();
-        } catch (Exception e) {
-            System.out.println("Error sending data :");
-            e.printStackTrace();
-            System.exit(-1);
+        for (FrameModel frameModel : frameModels) {
+            if (!sendFrame(frameModel)) break;
         }
-        addTimeOut();
+        System.out.println("---Batch sending end");
     }
 
     private void addTimeOut() {

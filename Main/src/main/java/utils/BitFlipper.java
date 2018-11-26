@@ -11,7 +11,7 @@ public class BitFlipper {
     private BitFlipper() {}
 
     public static String flipRandomBits(String bits) {
-        if(Math.random() > 0.75) {
+        /*if(Math.random() > 0.75) {
             StringBuilder sb = new StringBuilder(bits);
             int pos = (int) Math.floor(Math.random() * bits.length());
             if(sb.charAt(pos) == '0') {
@@ -21,7 +21,7 @@ public class BitFlipper {
             }
             System.out.println("Bit flipped : " + sb.toString());
             return sb.toString();
-        }
+        }*/
         return bits;
     }
 }

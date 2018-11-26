@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class Receiver extends SocketController {
 
     private ServerSocket server;
+
+    private int latestAckId;
 
     private ArrayList<FrameWindowModel> frameWindowModels = new ArrayList<>();
 
@@ -29,8 +30,8 @@ public class Receiver extends SocketController {
         configureSocket(client);
     }
 
-    public void packetsReceived(ArrayList<FrameModel> packetModels) {
-        super.packetsReceived(packetModels);
+    public void frameReceived(ArrayList<FrameModel> packetModels) {
+        super.frameReceived(packetModels);
         for (int i = 0, packetModelsSize = packetModels.size(); i < packetModelsSize; i++) {
             FrameModel frame = packetModels.get(i);
             switch (getState()) {
@@ -65,22 +66,24 @@ public class Receiver extends SocketController {
                                 //Verifie si lindex de linformation recue est bon
                                 if (getLatestFrameWindow().addFrame(informationFrameModel)) {
                                     //Pour repondre uniquement si cest la derniere frame dinformation recue de la batch
-                                    if (i == packetModelsSize - 1) {
+                                    if(Math.random() > (1.0 / 3.0) || informationFrameModel.getId() == latestAckId) {
                                         FrameModel frameModel = FrameFactory.createReceptionFrame(informationFrameModel.getId());
+                                        latestAckId = informationFrameModel.getId();
                                         sendFrame(frameModel);
                                     }
+
                                 } else {
                                     //Lindex nest pas bon alors on rejette la frame
-                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
+                                    FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getNextPosition() + 1) % 8);
                                     sendFrame(frameModel);
                                     return;
                                 }
                                 printReceivedMessage();
-                                return;
+                                break;
                             }
                             case P_BITS: {
                                 PBitFrameModel frameModel = (PBitFrameModel) frame;
-                                int pos = getLatestFrameWindow().getPosition();
+                                int pos = getLatestFrameWindow().getNextPosition();
                                 sendFrame(FrameFactory.createReceptionFrame(pos));
                                 return;
                             }
@@ -96,7 +99,7 @@ public class Receiver extends SocketController {
                         }
                     } else {
                         //La frame a une erreur alors on la rejette
-                        FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getPosition() + 1) % 8);
+                        FrameModel frameModel = FrameFactory.createRejectionFrame((getLatestFrameWindow().getNextPosition() + 1) % 8);
                         sendFrame(frameModel);
                         return;
                     }
@@ -116,7 +119,7 @@ public class Receiver extends SocketController {
     public void timeOutReached(int position) {
         switch (getState()) {
             case Open: {
-                int positionN = getLatestFrameWindow().getPosition();
+                int positionN = getLatestFrameWindow().getNextPosition();
                 FrameModel frame = FrameFactory.createReceptionFrame(positionN);
                 sendFrame(frame);
                 break;
@@ -124,10 +127,14 @@ public class Receiver extends SocketController {
         }
     }
 
-    public FrameWindowModel getLatestFrameWindow() {
+    private FrameWindowModel getLatestFrameWindow() {
         return frameWindowModels.get(frameWindowModels.size()-1);
     }
 
+
+    private int getLatestReceivedPos() {
+        return getLatestFrameWindow().getPosition();
+    }
 
     @Override
     public void close() {
