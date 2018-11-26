@@ -60,12 +60,24 @@ public class FrameWindowModel {
 
     public FrameModel[] getFrames() { return frames; }
 
-    public int getPosition() {
+    public int getNextPosition() {
         for(int i = 0; i < frames.length; i++) {
             if(frames[i] == null) {
                 return i;
             }
         }
         return frames.length + 1;
+    }
+
+    public int getPosition() {
+        for(int i = 0; i < frames.length; i++) {
+            if(frames[i] == null) {
+                if(i == 0) {
+                    return 7;
+                }
+                return i-1;
+            }
+        }
+        return frames.length;
     }
 }

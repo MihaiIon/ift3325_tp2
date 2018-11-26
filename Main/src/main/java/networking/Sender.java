@@ -1,7 +1,6 @@
 package networking;
 
 import factories.FrameFactory;
-import managers.CheckSumManager;
 import managers.DataManager;
 import models.*;
 
@@ -14,9 +13,9 @@ import java.util.ArrayList;
 public class Sender extends SocketController {
 
     private int posToSend = 0;
+    private int highestPosSent = 0;
 
     private InformationFrameModel[] allFramesToSend;
-    private ArrayList<InformationFrameModel> unconfirmedFrames = new ArrayList<>();
 
     /**
      * Constructs a sender
@@ -74,43 +73,33 @@ public class Sender extends SocketController {
 
 
     /**
-     * Envoie les frames suivantes sil en reste a envoyer ou un demande de déconnection sinon
+     * Envoie les frames suivantes sil en reste a envoyer ou une demande de déconnection sinon
      */
     private void sendNextFrames() {
         System.out.println("Sending next frames : " + posToSend);
 
+        //Verifie que lon na pas deja envoyé toutes les frames
         if(posToSend + 1 >= allFramesToSend.length) {
             sendFrame(FrameFactory.createDeconnexionFrame());
         } else {
-            ArrayList<FrameModel> frameModelsToSend = new ArrayList<>(unconfirmedFrames);
+            //On peut envoyer des frames
             int framePosition = posToSend;
-            while (framePosition % 8 != (posToSend + 7) % 8 && framePosition < allFramesToSend.length) {
-                InformationFrameModel frame = allFramesToSend[framePosition];
-                if (!unconfirmedFrames.contains(frame)) {
-                    unconfirmedFrames.add(frame);
-                }
-                frameModelsToSend.add(frame);
+            do  {
                 System.out.println("Sending frame at position : " + framePosition);
-                framePosition++;
-            }
-
-            try {
-                sendFrames(frameModelsToSend);
-            } catch (Exception e) {
-                System.out.println("Error sending frames");
-            }
+                InformationFrameModel frame = allFramesToSend[framePosition];
+                highestPosSent = framePosition;
+                sendFrame(frame);
+            } while (++framePosition % 8 != posToSend % 8 && framePosition < allFramesToSend.length);
         }
     }
 
     private void confirmFrames(int to) {
-        do  {
-            unconfirmedFrames.removeIf(f->f.getId() == posToSend % 8);
-        } while (posToSend++ % 8 != to % 8);
+        while (posToSend++ % 8 != to % 8);
     }
 
     @Override
-    public void packetsReceived(ArrayList<FrameModel> framesReceived) {
-        super.packetsReceived(framesReceived);
+    public void frameReceived(ArrayList<FrameModel> framesReceived) {
+        super.frameReceived(framesReceived);
         for(int i = 0; i < framesReceived.size(); i++) {
             FrameModel frameModel = framesReceived.get(i);
 
