@@ -21,6 +21,7 @@ public class FrameTypeModel {
     /**
      * Provides the FrameType represented by the provided stream of bits.
      * @param byteStream Stream of bits
+     * @return the frame type parse from the byteStream
      */
     public static FrameType parseFrameType(String byteStream) {
         byte type = ConversionManager.convertStringToByte(byteStream);

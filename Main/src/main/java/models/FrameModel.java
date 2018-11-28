@@ -169,6 +169,7 @@ public class FrameModel {
 
     /**
      * Converts FrameModel object to binary number (String representation).
+     * @return the frame on a binary format
      */
     public String toBinary() {
         String content = DataManager.addBitsStuffing(getFrameContent());
@@ -203,7 +204,7 @@ public class FrameModel {
 
     /**
      * DANGER
-     * @param id
+     * @param id the id to sed
      */
     public void setId(int id) {
         metadata = new ByteModel(id);

@@ -17,7 +17,7 @@ public class CheckSumManager {
     }
 
     /**
-     * Computes the checksum for the <type>, <metadata> and <data>.
+     * Computes the checksum for the type, metadata and data.
      * @param type FrameType of the Frame.
      * @param metadata Metadata of the Frame.
      * @param data Data of the Frame.

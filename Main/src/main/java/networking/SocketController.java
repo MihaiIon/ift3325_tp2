@@ -24,10 +24,19 @@ public abstract class SocketController {
 
     private AtomicInteger frameNumber = new AtomicInteger();
 
-    public boolean onFrameReceived(FrameModel frame) {
+
+    /**
+     * Increments the frameNumber to keep track of the number of frames receiver
+     * for the timeout thread to know when the was a timeout
+     * @param frame the received frame
+     * @return true if all when well, false otherwise
+     */
+    private boolean onFrameReceived(FrameModel frame) {
         frameNumber.incrementAndGet();
-        return true;
+        return processReceivedFrame(frame);
     };
+
+    abstract boolean processReceivedFrame(FrameModel frameModel);
 
     public abstract void onTimeOutReached(int position);
     abstract boolean handleOnStandbyState(FrameModel frame);
@@ -111,14 +120,6 @@ public abstract class SocketController {
         new TimeOutMonitor(frameNumber.incrementAndGet()).start();
     }
 
-    int nextPos(int pos) {
-        return pos >= 7 ? 0 : pos + 1;
-    }
-
-    int prevPosN(int pos) {
-        return pos == 0 ? 7 : pos - 1;
-    }
-
     State getState() {
         return state;
     }
@@ -145,25 +146,6 @@ public abstract class SocketController {
                     timeOutPublisher.onNext(packetNumber);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class DelayedStream extends Thread {
-
-        final String stream;
-
-        DelayedStream(final String stream) {
-            this.stream = stream;
-        }
-
-        public void run() {
-            try {
-                Thread.sleep((long) (Math.random() * 3.1));
-                out.writeUTF(stream);
-                out.flush();
-            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }

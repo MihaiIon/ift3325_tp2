@@ -21,9 +21,9 @@ public class Receiver extends SocketController {
     private static byte MAX_FRAME_POOL_SIZE = 6;
 
     /**
-     *
-     * @param port
-     * @throws IOException
+     * Basic Receiser constructor based on the port
+     * @param port the port number to use
+     * @throws IOException if the is an error opening the server socket
      */
     public Receiver(int port) throws IOException {
         server = new ServerSocket(port);
@@ -34,7 +34,7 @@ public class Receiver extends SocketController {
     // Methods
 
     /**
-     *
+     * Starts listening for a client to connect
      * @throws IOException
      */
     public void listen() throws IOException {
@@ -46,6 +46,9 @@ public class Receiver extends SocketController {
     }
 
 
+    /**
+     * Closes the resources of the server
+     */
     @Override
     public void closeServer() {
         if(server != null) {
@@ -59,7 +62,7 @@ public class Receiver extends SocketController {
     }
 
     /**
-     *
+     * send a reception frame throught the socket
      */
     private void sendReceptionFrame() {
         int lastId = getLatestFrameWindowSize();
@@ -69,7 +72,7 @@ public class Receiver extends SocketController {
     }
 
     /**
-     *
+     * Send a rejection frame throught the socket
      */
     private void sendRejectionFrame() {
         flushAllFrames = true;
@@ -78,7 +81,8 @@ public class Receiver extends SocketController {
     }
 
     /**
-     * @param frame
+     * Store a single frame in a window
+     * @param frame the frame to store
      * @return True if all went good.
      */
     private boolean storeFrame(FrameModel frame) {
@@ -92,7 +96,7 @@ public class Receiver extends SocketController {
     }
 
     /**
-     *
+     * Prints the received message from now
      */
     private void printReceivedMessage() {
         System.out.println("--------Received message :");
@@ -115,8 +119,7 @@ public class Receiver extends SocketController {
      * @param frame Received frame.
      * @return True if all went good.
      */
-    public boolean onFrameReceived(FrameModel frame) {
-        super.onFrameReceived(frame);
+    public boolean processReceivedFrame(FrameModel frame) {
         switch (getState()) {
             case STANDBY:
                 return handleOnStandbyState(frame);
@@ -129,6 +132,7 @@ public class Receiver extends SocketController {
     }
 
     /**
+     * Processes a single frame when the connection is on standy
      * @param frame Received frame.
      * @return True if all went good.
      */
@@ -146,6 +150,7 @@ public class Receiver extends SocketController {
     }
 
     /**
+     * Processes a single frame when the connection is open
      * @param frame Received frame.
      * @return True if all went good.
      */
@@ -195,8 +200,8 @@ public class Receiver extends SocketController {
 
 
     /**
-     *
-     * @return
+     * Get the latest frame window size
+     * @return the latest frame windows size
      */
     private int getLatestFrameWindowSize() {
         return frameWindows.get(frameWindows.size()-1).getSize();

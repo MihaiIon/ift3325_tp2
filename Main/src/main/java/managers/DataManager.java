@@ -20,7 +20,7 @@ public class DataManager {
     private static int PAYLOAD_MAX_LENGTH = CHARACTER_SIZE * 32;
 
     /**
-     * Splits the provided <message> into Information Frames.
+     * Splits the provided message into Information Frames.
      * @param message The message to be sent to the receiver.
      */
     public static InformationFrameModel[] splitMessageIntoFrames(String message) {
@@ -54,8 +54,9 @@ public class DataManager {
     }
 
     /**
-     *
-     * @param windows
+     * Get the message from the windows and the frames contained by the windows
+     * @param windows the list a windows to extract the message from
+     * @return the message
      */
     public static String extractMessageFromFrames(ArrayList<FrameWindowModel> windows) {
         StringBuilder message = new StringBuilder();
@@ -68,10 +69,11 @@ public class DataManager {
         return message.toString();
     }
 
-    /*
+    /**
      *   https://www.journaldev.com/709/java-read-file-line-by-line
      *   Lit un fichier ligne par ligne et les envoie
      *   @param filepath le path du fichier
+     * @return an array of information frame model for the specified message
      */
     public static InformationFrameModel[] readFile(String filepath) {
         try {

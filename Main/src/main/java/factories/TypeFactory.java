@@ -5,7 +5,7 @@ import models.FrameTypeModel;
 public class TypeFactory {
 
     /**
-     * Provides a FrameTypeModel corresponding to the provided <frameType>.
+     * Provides a FrameTypeModel corresponding to the provided frameType.
      */
     public static FrameTypeModel createTypeModel(FrameTypeModel.FrameType frameType) {
         switch (frameType) {

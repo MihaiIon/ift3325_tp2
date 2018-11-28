@@ -7,6 +7,7 @@ import models.*;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Sender extends SocketController {
@@ -19,6 +20,7 @@ public class Sender extends SocketController {
     private AtomicInteger currFrameIndex = new AtomicInteger();
     private AtomicInteger lastFrameIdReceived = new AtomicInteger();
     private AtomicInteger lastFrameIdSent = new AtomicInteger(-1);
+    private AtomicBoolean pBitSent = new AtomicBoolean(false);
     private String filepath;
     private InformationFrameModel[] framesToBeSent;
 
@@ -46,16 +48,18 @@ public class Sender extends SocketController {
     // Methods
 
     /**
-     *
+     * Send a connection frame to the received
      */
     private void sendConnectionFrame() {
+        pBitSent.set(true);
         sendFrame(FrameFactory.createConnectionFrame());
     }
 
     /**
-     *
+     * Send a pbitframe to the receiver
      */
     private void sendPBitFrame() {
+        pBitSent.set(true);
         sendFrame(FrameFactory.pBitFrame(lastFrameIdSent.get()));
     }
 
@@ -63,6 +67,7 @@ public class Sender extends SocketController {
      * Send Frames one by one until it fills the Receiver Frame pool.
      */
     private void sendNextFrames() {
+        pBitSent.set(false);
         // If the Sender is not busy...
         if(!isSendingInformationFrames) {
             // Send frames.
@@ -105,9 +110,9 @@ public class Sender extends SocketController {
     }
 
     /**
-     *
-     * @param id
-     * @return
+     * fix the id to be in the window size
+     * @param id the id to fix
+     * @return the fixed id
      */
     private int fixIdRange(int id) {
         if(currFrameIndex.get() == 0 && id < 0) return -1;
@@ -118,9 +123,13 @@ public class Sender extends SocketController {
     // ----------------------------------------------------------------------------------
     // Handlers
 
+    /**
+     * Processes a received frame
+     * @param frame the received frame to process
+     * @return true if all went well, false if the was an error
+     */
     @Override
-    public boolean onFrameReceived(FrameModel frame) {
-        super.onFrameReceived(frame);
+    public boolean processReceivedFrame(FrameModel frame) {
         switch (getState()) {
             case STANDBY:
                 return handleOnStandbyState(frame);
@@ -133,6 +142,7 @@ public class Sender extends SocketController {
     }
 
     /**
+     * Processes a single frame when on stanby state
      * @param frame Received frame.
      * @return True if all went good.
      */
@@ -152,6 +162,7 @@ public class Sender extends SocketController {
     }
 
     /**
+     * Processes a single frame when on connection open state
      * @param frame Received frame.
      * @return True if all went good.
      */
@@ -174,6 +185,10 @@ public class Sender extends SocketController {
         return true;
     }
 
+    /**
+     * Does actions when timeout reaches depending of the current state
+     * @param position the position of the timeout
+     */
     @Override
     public void onTimeOutReached(int position) {
         switch (getState()) {
@@ -191,7 +206,7 @@ public class Sender extends SocketController {
     }
 
     /**
-     *
+     * Updates the indexes and ids count depending on the received id
      * @param id Received Frame id.
      */
     private void handleOnFrameIdReceived(int id) {
@@ -208,7 +223,7 @@ public class Sender extends SocketController {
     }
 
     /**
-     *
+     * Updates the inidexes and ids count depending on the received id for a rejected frame id
      * @param id Rejected Frame id.
      */
     private void handleOnFrameIdRejected(int id) {
@@ -224,26 +239,26 @@ public class Sender extends SocketController {
     // Getters & Setters
 
     /**
-     *
-     * @return
+     * Check if the is enought room in the window to send another frame
+     * @return true if the is enought room in the window to send another frame
      */
     private boolean isReceiverReady() {
         return getReceiverFramePoolSize() < (didReceiveRejectionFrameId ? 1 : 8);
     }
 
     /**
-     *
-     * @return
+     * Prints the current frame index and the saved frame index
+     * @return the difference between the current frame index and the saved frame index
      */
     private int getReceiverFramePoolSize() {
-        System.out.println("********* " + currFrameIndex.get());
-        System.out.println("********* " + savedFrameIndex.get());
+        System.out.println("********* Current frame index is : " + currFrameIndex.get());
+        System.out.println("********* Saved frame index is : " + savedFrameIndex.get());
         return currFrameIndex.get() - savedFrameIndex.get();
     }
 
     /**
-     *
-     * @return
+     * Get the next frame to send with a change of it being a bad frame
+     * @return the next frame to send
      */
     private FrameModel getNextFrame() {
         if(Math.random() > 0.9) {

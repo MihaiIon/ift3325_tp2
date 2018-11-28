@@ -7,7 +7,7 @@ import org.fusesource.jansi.AnsiConsole;
 import java.io.IOException;
 import java.util.Arrays;
 
-/**
+/*
  * La commande d’exécution de l’émetteur est :
  * % Sender <Nom_Machine> <Numero_Port> <Nom_fichier> <0>
  * La dernière option fait référence à l’utilisation de Go-Back-N (0).
@@ -21,7 +21,7 @@ public class Main {
 
     /**
      *
-     * @param args
+     * @param args Les arguments du programme (se référence à la documentation de la classe principale)
      * @throws IOException
      */
     public static void main(String args[]) throws IOException {
