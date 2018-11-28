@@ -262,7 +262,7 @@ public class Sender extends SocketController {
      */
     private FrameModel getNextFrame() {
         if(Math.random() > 0.9) {
-            return getBadFrame();
+            //return getBadFrame();
         }
         if(currFrameIndex.get() < framesToBeSent.length) {
             return framesToBeSent[currFrameIndex.get()];
